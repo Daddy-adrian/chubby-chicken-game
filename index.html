@@ -193,112 +193,123 @@
   <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
 
   <!-- Speech/Vocab Frosted Popover Tooltip -->
-  <div id="vocab-popover" class="fixed hidden z-40 w-72 backdrop-blur-md bg-slate-900/95 text-white rounded-2xl shadow-2xl p-4 border border-white/20 transition-all duration-200 pointer-events-auto">
+  <div id="vocab-popover" class="fixed hidden z-40 w-[calc(100vw-28px)] max-w-xs backdrop-blur-md bg-slate-900/95 text-white rounded-2xl shadow-2xl p-3.5 sm:p-4 border border-white/20 transition-all duration-200 pointer-events-auto">
     <!-- Populated dynamically via JS -->
   </div>
 
   <!-- Main Container -->
-  <div class="w-full max-w-4xl mx-auto px-3 sm:px-6 py-4 flex flex-col min-h-screen justify-between z-10">
+  <div class="w-full max-w-4xl mx-auto px-2 sm:px-6 py-2 sm:py-4 flex flex-col min-h-screen justify-between z-10">
 
     <!-- Top Navigation & Stats Bar (iOS Island Glass Style) -->
-    <header class="w-full backdrop-blur-md bg-white/75 border border-white/60 rounded-3xl p-3 sm:p-4 shadow-sm shadow-sky-900/5 mb-3 sm:mb-4 transition-all">
-      <div class="flex items-center justify-between gap-2">
+    <header class="w-full backdrop-blur-md bg-white/80 border border-white/60 rounded-2xl sm:rounded-3xl p-2.5 sm:p-4 shadow-sm shadow-sky-900/5 mb-1.5 sm:mb-4 transition-all">
+      <div class="flex items-center justify-between gap-1.5 sm:gap-2">
         <!-- Logo & Title -->
-        <div class="flex items-center gap-2.5">
-          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-md shadow-orange-500/20 flex items-center justify-center text-2xl transform active:scale-95 transition-transform cursor-pointer" id="btn-header-chicken" title="Chubby Chicken!">
+        <div class="flex items-center gap-2 sm:gap-2.5">
+          <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-md shadow-orange-500/20 flex items-center justify-center text-xl sm:text-2xl transform active:scale-95 transition-transform cursor-pointer" id="btn-header-chicken" title="Chubby Chicken!">
             🐔
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <h1 class="font-fredoka font-bold text-lg sm:text-xl text-slate-900 tracking-tight leading-none">Chubby Chicken</h1>
-              <span class="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200/80">Flight v4</span>
+            <div class="flex items-center gap-1.5">
+              <h1 class="font-fredoka font-bold text-base sm:text-xl text-slate-900 tracking-tight leading-none">Chubby Chicken</h1>
+              <span class="hidden sm:inline-block text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200/80">Flight</span>
             </div>
-            <p class="text-xs text-slate-500 font-medium">Grammar Flight • A1 to Band III</p>
+            <p class="hidden sm:block text-xs text-slate-500 font-medium">Grammar Flight • A1 to Band III</p>
           </div>
         </div>
 
-        <!-- Badges & Counters -->
-        <div class="flex items-center gap-2 sm:gap-2.5">
-          <!-- Skin Tier Badge -->
-          <div id="skin-badge" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 font-bold text-xs shadow-inner transition-colors">
+        <!-- Badges & Controls -->
+        <div class="flex items-center gap-1.5 sm:gap-2.5">
+          <!-- Skin Tier Badge (Desktop) -->
+          <div id="skin-badge" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 font-bold text-xs shadow-inner transition-colors">
             <span id="skin-icon" class="text-base">🐣</span>
             <span id="skin-title">Yellow Chick</span>
           </div>
 
           <!-- Streak Island -->
-          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-orange-500/25">
-            <span class="text-base animate-pulse">🔥</span>
-            <span>Streak: <span id="stat-streak" class="font-black text-white text-base">0</span>/10</span>
+          <div class="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-orange-500/25">
+            <span class="text-sm sm:text-base animate-pulse">🔥</span>
+            <span class="text-xs sm:text-sm font-black"><span id="stat-streak">0</span>/10</span>
           </div>
 
-          <!-- Score Island with High Score tooltip -->
-          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-sky-500/10 border border-sky-400/30 text-sky-900 font-bold text-xs sm:text-sm shadow-inner" title="Current Score (High Score saved!)">
-            <span class="text-base">⭐</span>
-            <span id="stat-score" class="font-black">0</span>
-            <span class="hidden md:inline-block text-[10px] text-sky-700/70 border-l border-sky-300 pl-1.5 font-medium">Best: <span id="stat-high-score">0</span></span>
+          <!-- Score Island -->
+          <div class="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl bg-sky-500/10 border border-sky-400/30 text-sky-900 font-bold text-xs sm:text-sm shadow-inner" title="Current Score (High Score saved!)">
+            <span class="text-sm sm:text-base">⭐</span>
+            <span id="stat-score" class="font-black text-xs sm:text-sm">0</span>
+            <span class="hidden lg:inline-block text-[10px] text-sky-700/70 border-l border-sky-300 pl-1.5 font-medium">Best: <span id="stat-high-score">0</span></span>
           </div>
 
           <!-- Farm BGM Music Toggle Button -->
-          <button id="btn-bgm-toggle" class="h-9 px-2.5 rounded-2xl bg-white/80 border border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-90 flex items-center gap-1 transition shadow-sm text-xs font-bold" title="Toggle Farm Country Music Loop">
+          <button id="btn-bgm-toggle" type="button" class="h-8 px-2 sm:h-9 sm:px-2.5 rounded-xl sm:rounded-2xl bg-white/80 border border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-90 flex items-center gap-1 transition shadow-sm text-xs font-bold" title="Toggle Farm Country Music Loop">
             <span id="icon-bgm">🎵</span>
-            <span id="text-bgm" class="hidden md:inline">BGM</span>
+            <span id="text-bgm" class="hidden sm:inline">BGM</span>
           </button>
 
           <!-- Audio Mute Button -->
-          <button id="btn-audio-toggle" class="w-9 h-9 rounded-2xl bg-white/80 border border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-90 flex items-center justify-center transition shadow-sm" title="Toggle Sound Effects">
+          <button id="btn-audio-toggle" type="button" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-white/80 border border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-90 flex items-center justify-center transition shadow-sm" title="Toggle Sound Effects">
             <span id="icon-sound">🔊</span>
           </button>
+
+          <!-- Preferences / Settings Collapsible Toggle Button -->
+          <button id="btn-toggle-settings" type="button" class="h-8 sm:h-9 px-2 sm:px-3 rounded-xl sm:rounded-2xl bg-white/90 hover:bg-slate-100 border border-slate-200/90 text-slate-800 font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all" title="Toggle Settings & Modes">
+            <span class="text-sm">⚙️</span>
+            <span id="settings-summary-badge" class="hidden md:inline-block text-[11px] font-semibold text-slate-600 max-w-[120px] truncate">A1 • Mix All</span>
+            <span id="settings-chevron" class="text-[9px] text-slate-400 transition-transform duration-200">▼</span>
+          </button>
         </div>
       </div>
 
-      <!-- Level Segmented Selector (A1 Beginner vs Band III Grade 12) -->
-      <div class="mt-3 pt-3 border-t border-slate-100/90 flex flex-col sm:flex-row items-center justify-between gap-2.5">
-        <div class="flex items-center justify-center gap-1 p-1 bg-slate-200/80 rounded-2xl w-full sm:w-auto shadow-inner">
-          <button id="lvl-a1-btn" type="button" class="flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all bg-white text-emerald-600 shadow-sm active:scale-95">
-            🟢 Level 1: A1 Beginner
-          </button>
-          <button id="lvl-b3-btn" type="button" class="flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all text-slate-600 hover:text-slate-900 active:scale-95">
-            🟣 Level 2: Band III Grade 12
-          </button>
+      <!-- Collapsible Preferences & Settings Panel -->
+      <div id="preferences-panel" class="hidden transition-all duration-300 ease-in-out border-t border-slate-100/90 mt-2.5 pt-2.5">
+        <!-- Level Segmented Selector (A1 Beginner vs Band III Grade 12) -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 mb-2.5">
+          <div class="flex items-center justify-center gap-1 p-1 bg-slate-200/80 rounded-2xl w-full sm:w-auto shadow-inner">
+            <button id="lvl-a1-btn" type="button" class="flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all bg-white text-emerald-600 shadow-sm active:scale-95">
+              🟢 Level 1: A1 Beginner
+            </button>
+            <button id="lvl-b3-btn" type="button" class="flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all text-slate-600 hover:text-slate-900 active:scale-95">
+              🟣 Level 2: Band III Grade 12
+            </button>
+          </div>
+          <div class="flex items-center justify-between w-full sm:w-auto gap-2">
+            <span id="level-desc" class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg font-semibold text-[11px]">Everyday vocabulary & daily life</span>
+            <button id="btn-close-settings" type="button" class="sm:hidden text-xs text-indigo-600 font-bold px-2 py-1 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition">Done ✕</button>
+          </div>
         </div>
-        <div class="text-[11px] text-slate-500 font-medium flex items-center gap-1">
-          <span id="level-desc" class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg font-semibold">Everyday vocabulary & daily life</span>
-        </div>
-      </div>
 
-      <!-- Category Filter Segmented Pill Bar -->
-      <div class="mt-2.5 pt-2 border-t border-slate-100">
-        <div class="flex items-center justify-between text-xs text-slate-500 font-medium mb-1.5 px-1">
-          <span class="font-semibold text-slate-600 flex items-center gap-1">
-            <span>🎯</span> Grammar Mode:
-          </span>
-          <span id="category-question-count" class="text-[11px] text-slate-400">32 Questions</span>
-        </div>
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-1.5 pt-0.5 custom-scrollbar" id="category-pill-container">
-          <button data-cat="all" class="category-pill active shrink-0 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-150 bg-slate-900 text-white shadow-md shadow-slate-900/20 active:scale-95">
-            ✨ Mix All
-          </button>
-          <button data-cat="past_simple" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
-            ⏳ Past Simple
-          </button>
-          <button data-cat="present_simple" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
-            ⚡ Present Simple
-          </button>
-          <button data-cat="future_simple" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
-            🚀 Future Simple
-          </button>
-          <button data-cat="present_progressive" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
-            🏃 Progressive
-          </button>
-          <button data-cat="articles" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
-            🅰️ A vs An
-          </button>
-          <button data-cat="state_location" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
-            📍 State & Location
-          </button>
-          <button data-cat="prepositions_proverbs" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
-            💎 Prepositions & Idioms
-          </button>
+        <!-- Category Filter Segmented Pill Bar -->
+        <div class="pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium mb-1.5 px-1">
+            <span class="font-semibold text-slate-600 flex items-center gap-1">
+              <span>🎯</span> Grammar Mode:
+            </span>
+            <span id="category-question-count" class="text-[11px] text-slate-400">32 Questions</span>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1.5 pt-0.5 custom-scrollbar" id="category-pill-container">
+            <button data-cat="all" class="category-pill active shrink-0 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-150 bg-slate-900 text-white shadow-md shadow-slate-900/20 active:scale-95">
+              ✨ Mix All
+            </button>
+            <button data-cat="past_simple" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+              ⏳ Past Simple
+            </button>
+            <button data-cat="present_simple" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+              ⚡ Present Simple
+            </button>
+            <button data-cat="future_simple" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+              🚀 Future Simple
+            </button>
+            <button data-cat="present_progressive" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+              🏃 Progressive
+            </button>
+            <button data-cat="articles" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+              🅰️ A vs An
+            </button>
+            <button data-cat="state_location" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+              📍 State & Location
+            </button>
+            <button data-cat="prepositions_proverbs" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+              💎 Prepositions & Idioms
+            </button>
+          </div>
         </div>
       </div>
     </header>
@@ -307,18 +318,18 @@
     <main class="w-full flex-1 flex flex-col justify-center items-center relative my-2">
 
       <!-- Flight Progress Bar to Streak 10 Milestone -->
-      <div class="w-full max-w-md mx-auto mb-3 px-2">
-        <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1.5">
-          <span class="flex items-center gap-1.5">
-            <span class="text-orange-500">🎈</span>
+      <div class="w-full max-w-md mx-auto mb-1.5 sm:mb-3 px-1 sm:px-2">
+        <div class="flex items-center justify-between text-[11px] sm:text-xs font-bold text-slate-600 mb-1">
+          <span class="flex items-center gap-1">
+            <span class="text-orange-500 text-xs sm:text-sm">🎈</span>
             <span>Flight Readiness:</span>
           </span>
-          <span id="flight-readiness-label" class="text-indigo-600 font-extrabold">0% (Scale: 1.0x)</span>
+          <span id="flight-readiness-label" class="text-indigo-600 font-extrabold text-[11px] sm:text-xs">0% (Scale: 1.0x)</span>
         </div>
-        <div class="h-3.5 w-full bg-slate-200/80 rounded-full overflow-hidden p-0.5 border border-white/60 shadow-inner">
+        <div class="h-2.5 sm:h-3.5 w-full bg-slate-200/80 rounded-full overflow-hidden p-0.5 border border-white/60 shadow-inner">
           <div id="flight-progress-bar" class="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-500 rounded-full transition-all duration-500 ease-out shadow" style="width: 0%"></div>
         </div>
-        <div class="flex justify-between items-center text-[10px] text-slate-400 mt-1 font-semibold px-0.5">
+        <div class="hidden sm:flex justify-between items-center text-[10px] text-slate-400 mt-1 font-semibold px-0.5">
           <span>Deflated (0.8x)</span>
           <span>Base (1.0x)</span>
           <span>Max Chubby (2.2x) 🛫</span>
@@ -326,7 +337,7 @@
       </div>
 
       <!-- Chicken Flight Arena Stage -->
-      <div id="arena-stage" class="relative w-full max-w-lg h-44 sm:h-50 flex items-center justify-center overflow-visible select-none my-1">
+      <div id="arena-stage" class="relative w-full max-w-lg h-24 sm:h-44 md:h-48 flex items-center justify-center overflow-visible select-none my-0 sm:my-1">
         
         <!-- Background Clouds (Decorative & Parallax) -->
         <div class="absolute inset-0 pointer-events-none opacity-40 overflow-hidden rounded-3xl">
@@ -336,7 +347,7 @@
         </div>
 
         <!-- Ground / Nest Shadow (Scales with chicken) -->
-        <div id="chicken-shadow" class="absolute bottom-6 w-32 h-6 bg-slate-800/15 rounded-full blur-sm transition-all duration-300"></div>
+        <div id="chicken-shadow" class="absolute bottom-2 sm:bottom-6 w-20 sm:w-32 h-3.5 sm:h-6 bg-slate-800/15 rounded-full blur-xs sm:blur-sm transition-all duration-300"></div>
 
         <!-- Interactive Chubby Chicken SVG Root Container -->
         <div id="chicken-hero" class="relative z-20 cursor-pointer transition-transform duration-300 ease-out skin-yellow" style="--chicken-scale: 1.0; transform: scale(1.0);" title="Tap me to chirp!">
@@ -345,7 +356,7 @@
           <div id="cosmic-aura" class="absolute -inset-8 pointer-events-none rounded-full hidden opacity-75 blur-md bg-gradient-to-tr from-pink-400 via-purple-400 to-cyan-300 animate-pulse"></div>
 
           <!-- Chicken SVG Vector Graphic -->
-          <svg id="chicken-svg" width="170" height="170" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" class="overflow-visible filter drop-shadow-md">
+          <svg id="chicken-svg" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 sm:w-36 sm:h-36 md:w-40 md:h-40 overflow-visible filter drop-shadow-md">
             <defs>
               <!-- Body Gradient -->
               <linearGradient id="bodyGradient" x1="20" y1="20" x2="140" y2="140" gradientUnits="userSpaceOnUse">
@@ -445,7 +456,7 @@
       </div>
 
       <!-- Explanation Card (Hidden by default, shown on wrong answer) -->
-      <div id="explanation-card" class="hidden w-full max-w-xl mx-auto my-3 p-4 bg-amber-50/95 border-2 border-amber-300 rounded-3xl shadow-xl backdrop-blur-md text-right transition-all" dir="rtl">
+      <div id="explanation-card" class="hidden w-full max-w-xl mx-auto my-1.5 sm:my-3 p-3 sm:p-4 bg-amber-50/95 border-2 border-amber-300 rounded-2xl sm:rounded-3xl shadow-xl backdrop-blur-md text-right transition-all" dir="rtl">
         <div class="flex items-center justify-between border-b border-amber-200 pb-2 mb-2">
           <span class="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full">💡 הסבר פדגוגי</span>
           <span id="correct-answer-badge" class="font-mono text-sm font-black text-emerald-700 bg-emerald-100 px-3 py-1 rounded-xl">תשובה: ...</span>
@@ -460,7 +471,7 @@
       </div>
 
       <!-- Question Card & Interactive Word Lookup Container -->
-      <section class="w-full max-w-xl mx-auto backdrop-blur-xl bg-white/90 border border-white/70 rounded-3xl p-5 sm:p-7 shadow-xl shadow-sky-950/5 transition-all">
+      <section class="w-full max-w-xl mx-auto backdrop-blur-xl bg-white/95 border border-white/80 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-xl shadow-sky-950/5 transition-all">
         
         <!-- Category & Type Meta Header -->
         <div class="flex items-center justify-between text-xs font-bold text-slate-400 mb-3 border-b border-slate-100 pb-2">
@@ -476,14 +487,14 @@
         </div>
 
         <!-- Interactive Tokenized Sentence Area -->
-        <div class="my-4 min-h-[72px] flex items-center justify-center text-center">
-          <div id="sentence-display" class="text-lg sm:text-2xl font-bold text-slate-800 leading-relaxed tracking-wide select-none">
+        <div class="my-2 sm:my-4 min-h-[48px] sm:min-h-[72px] flex items-center justify-center text-center">
+          <div id="sentence-display" class="text-base sm:text-2xl font-bold text-slate-800 leading-snug sm:leading-relaxed tracking-wide select-none">
             <!-- Dynamically injected word tokens and target blank input -->
           </div>
         </div>
 
         <!-- Reference Word Bank & Submit Control -->
-        <div class="mt-5 pt-3 border-t border-slate-100 flex flex-col items-center gap-3">
+        <div class="mt-2.5 sm:mt-5 pt-2 sm:pt-3 border-t border-slate-100 flex flex-col items-center gap-2 sm:gap-3">
           <div class="w-full flex items-center justify-between text-xs text-slate-500 font-semibold px-1">
             <span class="flex items-center gap-1.5">
               <span>📦</span> Word Bank:
@@ -492,13 +503,13 @@
           </div>
 
           <!-- Word Bank Reference Pills Container -->
-          <div id="word-bank-options" class="flex flex-wrap justify-center gap-2 w-full min-h-[40px]">
+          <div id="word-bank-options" class="flex flex-wrap justify-center gap-1.5 sm:gap-2 w-full min-h-[36px] sm:min-h-[40px]">
             <!-- Dynamic word bank pills -->
           </div>
 
           <!-- Submit Action Button -->
           <div class="w-full flex items-center justify-center pt-1">
-            <button id="btn-submit-answer" type="button" class="w-full sm:w-auto min-w-[220px] px-6 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 active:scale-95 transition-all flex items-center justify-center gap-2">
+            <button id="btn-submit-answer" type="button" class="w-full sm:w-auto min-w-[200px] sm:min-w-[220px] px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 active:scale-95 transition-all flex items-center justify-center gap-2">
               <span>Check / בדוק</span>
               <span>➔</span>
             </button>
@@ -2687,7 +2698,12 @@ const BAND3_QUESTION_BANK = [
           explanationText: document.getElementById('explanation-text'),
           continueNextBtn: document.getElementById('continue-next-btn'),
           eyesNormal: document.getElementById('eyes-normal'),
-          eyesDizzy: document.getElementById('eyes-dizzy')
+          eyesDizzy: document.getElementById('eyes-dizzy'),
+          preferencesPanel: document.getElementById('preferences-panel'),
+          btnToggleSettings: document.getElementById('btn-toggle-settings'),
+          btnCloseSettings: document.getElementById('btn-close-settings'),
+          settingsSummaryBadge: document.getElementById('settings-summary-badge'),
+          settingsChevron: document.getElementById('settings-chevron')
         };
         this.lastFailedTarget = null;
 
@@ -2716,6 +2732,23 @@ const BAND3_QUESTION_BANK = [
         };
         window.addEventListener('pointerdown', startAudioAndBGM, { once: true });
         window.addEventListener('keydown', startAudioAndBGM, { once: true });
+
+        // Preferences / Settings Panel Toggle
+        if (this.dom.btnToggleSettings) {
+          this.dom.btnToggleSettings.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.togglePreferencesPanel();
+          });
+        }
+        if (this.dom.btnCloseSettings) {
+          this.dom.btnCloseSettings.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.togglePreferencesPanel(false);
+          });
+        }
+        window.addEventListener('resize', () => {
+          this.updateChickenVisuals();
+        });
 
         // Level Selector Toggle
         if (this.dom.lvlA1Btn) {
@@ -2869,6 +2902,33 @@ const BAND3_QUESTION_BANK = [
         });
       }
 
+      togglePreferencesPanel(forceState) {
+        if (!this.dom.preferencesPanel) return;
+        const isHidden = this.dom.preferencesPanel.classList.contains('hidden');
+        const shouldShow = typeof forceState === 'boolean' ? forceState : isHidden;
+
+        if (shouldShow) {
+          this.dom.preferencesPanel.classList.remove('hidden');
+          if (this.dom.settingsChevron) this.dom.settingsChevron.classList.add('rotate-180');
+          if (this.dom.btnToggleSettings) {
+            this.dom.btnToggleSettings.classList.add('bg-indigo-50', 'border-indigo-300', 'text-indigo-800');
+          }
+        } else {
+          this.dom.preferencesPanel.classList.add('hidden');
+          if (this.dom.settingsChevron) this.dom.settingsChevron.classList.remove('rotate-180');
+          if (this.dom.btnToggleSettings) {
+            this.dom.btnToggleSettings.classList.remove('bg-indigo-50', 'border-indigo-300', 'text-indigo-800');
+          }
+        }
+      }
+
+      updateSettingsSummary() {
+        if (!this.dom.settingsSummaryBadge) return;
+        const lvlText = this.currentLevel === 'a1' ? 'A1' : 'Band III';
+        const catText = this.formatCategoryName(this.activeCategory);
+        this.dom.settingsSummaryBadge.textContent = `${lvlText} • ${catText}`;
+      }
+
       setLevel(lvl) {
         this.currentLevel = lvl;
         localStorage.setItem('cc_level', lvl);
@@ -2897,6 +2957,7 @@ const BAND3_QUESTION_BANK = [
           }
         }
 
+        this.updateSettingsSummary();
         this.setCategory(this.activeCategory);
       }
 
@@ -2923,6 +2984,11 @@ const BAND3_QUESTION_BANK = [
         this.shuffle(this.filteredQuestions);
         this.currentQuestionIndex = 0;
         this.dom.categoryCount.textContent = `${this.filteredQuestions.length} Question${this.filteredQuestions.length === 1 ? '' : 's'}`;
+        this.updateSettingsSummary();
+        // On mobile screen, close settings after selection so user sees game cleanly
+        if (window.innerWidth < 640 && this.dom.preferencesPanel && !this.dom.preferencesPanel.classList.contains('hidden')) {
+          setTimeout(() => this.togglePreferencesPanel(false), 220);
+        }
         this.loadNextQuestion();
       }
 
@@ -3049,7 +3115,7 @@ const BAND3_QUESTION_BANK = [
             input.autocorrect = 'off';
             input.autocapitalize = 'off';
             input.spellcheck = false;
-            input.className = 'w-36 sm:w-48 px-3 py-1.5 text-center font-bold text-blue-600 bg-blue-50/90 border-2 border-blue-400 focus:border-blue-600 focus:bg-white rounded-xl outline-none shadow-inner transition-all align-middle text-base sm:text-xl';
+            input.className = 'w-28 sm:w-44 px-2 sm:px-3 py-1 sm:py-1.5 text-center font-bold text-blue-600 bg-blue-50/90 border-2 border-blue-400 focus:border-blue-600 focus:bg-white rounded-xl outline-none shadow-inner transition-all align-middle text-sm sm:text-xl';
 
             // Auto-submit on Enter key
             input.addEventListener('keydown', (e) => {
@@ -3152,12 +3218,14 @@ const BAND3_QUESTION_BANK = [
 
                 // Position Popover above the word (or below if near top)
                 const rect = wordSpan.getBoundingClientRect();
+                const popoverWidth = Math.min(290, window.innerWidth - 24);
+                popover.style.width = `${popoverWidth}px`;
                 const popoverHeight = popover.offsetHeight || 105;
-                let topPos = rect.top - popoverHeight - 12;
+                let topPos = rect.top - popoverHeight - 10;
                 if (topPos < 10) {
                   topPos = rect.bottom + 8;
                 }
-                const leftPos = Math.max(16, Math.min(window.innerWidth - 300, rect.left + (rect.width / 2) - 144));
+                const leftPos = Math.max(12, Math.min(window.innerWidth - popoverWidth - 12, rect.left + (rect.width / 2) - (popoverWidth / 2)));
 
                 popover.style.top = `${topPos}px`;
                 popover.style.left = `${leftPos}px`;
@@ -3183,7 +3251,7 @@ const BAND3_QUESTION_BANK = [
         options.forEach(opt => {
           const pill = document.createElement('button');
           pill.type = 'button';
-          pill.className = 'word-bank-pill px-4 py-2 bg-white/90 hover:bg-blue-50 border border-slate-200 text-slate-800 font-semibold rounded-2xl shadow-sm active:scale-95 transition-all text-sm hover:border-blue-300';
+          pill.className = 'word-bank-pill px-3 py-1.5 sm:px-4 sm:py-2 bg-white/95 hover:bg-blue-50 border border-slate-200 text-slate-800 font-semibold rounded-xl sm:rounded-2xl shadow-xs active:scale-95 transition-all text-xs sm:text-sm hover:border-blue-300';
           pill.textContent = opt;
 
           // Tapping a word pill auto-fills the input box
@@ -3342,7 +3410,9 @@ const BAND3_QUESTION_BANK = [
         this.dom.chickenHero.style.setProperty('--chicken-scale', this.chickenScale);
         this.dom.chickenHero.style.transform = `scale(${this.chickenScale})`;
 
-        const shadowWidth = Math.round(128 * this.chickenScale);
+        const isMobile = window.innerWidth < 640;
+        const baseShadow = isMobile ? 70 : 128;
+        const shadowWidth = Math.round(baseShadow * this.chickenScale);
         this.dom.chickenShadow.style.width = `${shadowWidth}px`;
         this.dom.chickenShadow.style.opacity = (0.2 + (this.chickenScale - 0.8) * 0.15).toFixed(2);
 
