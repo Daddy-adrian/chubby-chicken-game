@@ -1,0 +1,3502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chubby Chicken Grammar Flight – Arcade Grammar Game</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Fredoka & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            fredoka: ['Fredoka', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            rubik: ['Rubik', 'sans-serif'],
+          },
+          animation: {
+            'bounce-slow': 'bounce 2.5s infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'wing-flap': 'wingFlap 0.4s ease-in-out infinite alternate',
+            'blink': 'blink 4s infinite',
+            'pulse-subtle': 'pulseSubtle 2s infinite',
+            'cloud-move-1': 'cloudMove 25s linear infinite',
+            'cloud-move-2': 'cloudMove 38s linear infinite reverse',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            wingFlap: {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(-25deg)' },
+            },
+            blink: {
+              '0%, 90%, 100%': { transform: 'scaleY(1)' },
+              '95%': { transform: 'scaleY(0.1)' },
+            },
+            pulseSubtle: {
+              '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+              '50%': { opacity: '0.85', transform: 'scale(0.98)' },
+            },
+            cloudMove: {
+              '0%': { transform: 'translateX(-10%)' },
+              '100%': { transform: 'translateX(110%)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* iOS smooth touches and styles */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea {
+      user-select: text;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    /* Chicken Skin Effects */
+    .skin-yellow {
+      --body-grad-start: #FDE047;
+      --body-grad-end: #EAB308;
+      --belly-col: #FEF08A;
+      --comb-col: #EF4444;
+      --beak-col: #F97316;
+      --wing-col: #FACC15;
+    }
+    .skin-coral {
+      --body-grad-start: #FDA4AF;
+      --body-grad-end: #F43F5E;
+      --belly-col: #FFE4E6;
+      --comb-col: #BE123C;
+      --beak-col: #FB923C;
+      --wing-col: #FB7185;
+    }
+    .skin-emerald {
+      --body-grad-start: #6EE7B7;
+      --body-grad-end: #059669;
+      --belly-col: #D1FAE5;
+      --comb-col: #F59E0B;
+      --beak-col: #F97316;
+      --wing-col: #34D399;
+    }
+    .skin-sapphire {
+      --body-grad-start: #93C5FD;
+      --body-grad-end: #2563EB;
+      --belly-col: #DBEAFE;
+      --comb-col: #4F46E5;
+      --beak-col: #F59E0B;
+      --wing-col: #60A5FA;
+    }
+    .skin-golden {
+      --body-grad-start: #FCD34D;
+      --body-grad-end: #D97706;
+      --belly-col: #FEF3C7;
+      --comb-col: #B45309;
+      --beak-col: #EA580C;
+      --wing-col: #F59E0B;
+    }
+    .skin-holographic {
+      --body-grad-start: #C084FC;
+      --body-grad-end: #38BDF8;
+      --belly-col: #F0ABFC;
+      --comb-col: #F43F5E;
+      --beak-col: #FBBF24;
+      --wing-col: #818CF8;
+    }
+
+    /* Flight animation */
+    @keyframes flyOffScreen {
+      0% {
+        transform: translate(0, 0) scale(var(--chicken-scale, 1.5)) rotate(0deg);
+      }
+      25% {
+        transform: translate(20px, -40px) scale(calc(var(--chicken-scale, 1.5) * 1.1)) rotate(-15deg);
+      }
+      50% {
+        transform: translate(120px, -150px) scale(calc(var(--chicken-scale, 1.5) * 1.15)) rotate(-25deg);
+      }
+      100% {
+        transform: translate(650px, -600px) scale(calc(var(--chicken-scale, 1.5) * 0.7)) rotate(-35deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes dropIn {
+      0% {
+        transform: translate(0, -350px) scale(0.6) rotate(10deg);
+        opacity: 0;
+      }
+      65% {
+        transform: translate(0, 15px) scale(1.15) rotate(-4deg);
+        opacity: 1;
+      }
+      85% {
+        transform: translate(0, -6px) scale(0.95) rotate(2deg);
+      }
+      100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+
+    .anim-flying {
+      animation: flyOffScreen 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
+    }
+
+    .anim-drop-in {
+      animation: dropIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+    }
+
+    .shake-wrong {
+      animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-3px, 0, 0); }
+      20%, 80% { transform: translate3d(5px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50 text-slate-800 min-h-screen font-sans flex flex-col items-center justify-between overflow-x-hidden antialiased selection:bg-amber-200 selection:text-amber-900">
+
+  <!-- Confetti Canvas (Fixed Fullscreen Overlay) -->
+  <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+  <!-- Speech/Vocab Frosted Popover Tooltip -->
+  <div id="vocab-popover" class="fixed hidden z-40 w-72 backdrop-blur-md bg-slate-900/95 text-white rounded-2xl shadow-2xl p-4 border border-white/20 transition-all duration-200 pointer-events-auto">
+    <!-- Populated dynamically via JS -->
+  </div>
+
+  <!-- Main Container -->
+  <div class="w-full max-w-4xl mx-auto px-3 sm:px-6 py-4 flex flex-col min-h-screen justify-between z-10">
+
+    <!-- Top Navigation & Stats Bar (iOS Island Glass Style) -->
+    <header class="w-full backdrop-blur-md bg-white/75 border border-white/60 rounded-3xl p-3 sm:p-4 shadow-sm shadow-sky-900/5 mb-3 sm:mb-4 transition-all">
+      <div class="flex items-center justify-between gap-2">
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-md shadow-orange-500/20 flex items-center justify-center text-2xl transform active:scale-95 transition-transform cursor-pointer" id="btn-header-chicken" title="Chubby Chicken!">
+            🐔
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-fredoka font-bold text-lg sm:text-xl text-slate-900 tracking-tight leading-none">Chubby Chicken</h1>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200/80">Flight v4</span>
+            </div>
+            <p class="text-xs text-slate-500 font-medium">Grammar Flight • A1 to Band III</p>
+          </div>
+        </div>
+
+        <!-- Badges & Counters -->
+        <div class="flex items-center gap-2 sm:gap-2.5">
+          <!-- Skin Tier Badge -->
+          <div id="skin-badge" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 font-bold text-xs shadow-inner transition-colors">
+            <span id="skin-icon" class="text-base">🐣</span>
+            <span id="skin-title">Yellow Chick</span>
+          </div>
+
+          <!-- Streak Island -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-orange-500/25">
+            <span class="text-base animate-pulse">🔥</span>
+            <span>Streak: <span id="stat-streak" class="font-black text-white text-base">0</span>/10</span>
+          </div>
+
+          <!-- Score Island with High Score tooltip -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-sky-500/10 border border-sky-400/30 text-sky-900 font-bold text-xs sm:text-sm shadow-inner" title="Current Score (High Score saved!)">
+            <span class="text-base">⭐</span>
+            <span id="stat-score" class="font-black">0</span>
+            <span class="hidden md:inline-block text-[10px] text-sky-700/70 border-l border-sky-300 pl-1.5 font-medium">Best: <span id="stat-high-score">0</span></span>
+          </div>
+
+          <!-- Farm BGM Music Toggle Button -->
+          <button id="btn-bgm-toggle" class="h-9 px-2.5 rounded-2xl bg-white/80 border border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-90 flex items-center gap-1 transition shadow-sm text-xs font-bold" title="Toggle Farm Country Music Loop">
+            <span id="icon-bgm">🎵</span>
+            <span id="text-bgm" class="hidden md:inline">BGM</span>
+          </button>
+
+          <!-- Audio Mute Button -->
+          <button id="btn-audio-toggle" class="w-9 h-9 rounded-2xl bg-white/80 border border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-90 flex items-center justify-center transition shadow-sm" title="Toggle Sound Effects">
+            <span id="icon-sound">🔊</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Level Segmented Selector (A1 Beginner vs Band III Grade 12) -->
+      <div class="mt-3 pt-3 border-t border-slate-100/90 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+        <div class="flex items-center justify-center gap-1 p-1 bg-slate-200/80 rounded-2xl w-full sm:w-auto shadow-inner">
+          <button id="lvl-a1-btn" type="button" class="flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all bg-white text-emerald-600 shadow-sm active:scale-95">
+            🟢 Level 1: A1 Beginner
+          </button>
+          <button id="lvl-b3-btn" type="button" class="flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all text-slate-600 hover:text-slate-900 active:scale-95">
+            🟣 Level 2: Band III Grade 12
+          </button>
+        </div>
+        <div class="text-[11px] text-slate-500 font-medium flex items-center gap-1">
+          <span id="level-desc" class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg font-semibold">Everyday vocabulary & daily life</span>
+        </div>
+      </div>
+
+      <!-- Category Filter Segmented Pill Bar -->
+      <div class="mt-2.5 pt-2 border-t border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-500 font-medium mb-1.5 px-1">
+          <span class="font-semibold text-slate-600 flex items-center gap-1">
+            <span>🎯</span> Grammar Mode:
+          </span>
+          <span id="category-question-count" class="text-[11px] text-slate-400">32 Questions</span>
+        </div>
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1.5 pt-0.5 custom-scrollbar" id="category-pill-container">
+          <button data-cat="all" class="category-pill active shrink-0 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-150 bg-slate-900 text-white shadow-md shadow-slate-900/20 active:scale-95">
+            ✨ Mix All
+          </button>
+          <button data-cat="past_simple" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+            ⏳ Past Simple
+          </button>
+          <button data-cat="present_simple" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+            ⚡ Present Simple
+          </button>
+          <button data-cat="future_simple" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+            🚀 Future Simple
+          </button>
+          <button data-cat="present_progressive" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+            🏃 Progressive
+          </button>
+          <button data-cat="articles" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+            🅰️ A vs An
+          </button>
+          <button data-cat="state_location" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+            📍 State & Location
+          </button>
+          <button data-cat="prepositions_proverbs" class="category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95">
+            💎 Prepositions & Idioms
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Game Arena -->
+    <main class="w-full flex-1 flex flex-col justify-center items-center relative my-2">
+
+      <!-- Flight Progress Bar to Streak 10 Milestone -->
+      <div class="w-full max-w-md mx-auto mb-3 px-2">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1.5">
+          <span class="flex items-center gap-1.5">
+            <span class="text-orange-500">🎈</span>
+            <span>Flight Readiness:</span>
+          </span>
+          <span id="flight-readiness-label" class="text-indigo-600 font-extrabold">0% (Scale: 1.0x)</span>
+        </div>
+        <div class="h-3.5 w-full bg-slate-200/80 rounded-full overflow-hidden p-0.5 border border-white/60 shadow-inner">
+          <div id="flight-progress-bar" class="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-500 rounded-full transition-all duration-500 ease-out shadow" style="width: 0%"></div>
+        </div>
+        <div class="flex justify-between items-center text-[10px] text-slate-400 mt-1 font-semibold px-0.5">
+          <span>Deflated (0.8x)</span>
+          <span>Base (1.0x)</span>
+          <span>Max Chubby (2.2x) 🛫</span>
+        </div>
+      </div>
+
+      <!-- Chicken Flight Arena Stage -->
+      <div id="arena-stage" class="relative w-full max-w-lg h-44 sm:h-50 flex items-center justify-center overflow-visible select-none my-1">
+        
+        <!-- Background Clouds (Decorative & Parallax) -->
+        <div class="absolute inset-0 pointer-events-none opacity-40 overflow-hidden rounded-3xl">
+          <div class="absolute top-4 -left-12 animate-cloud-move-1 text-4xl select-none">☁️</div>
+          <div class="absolute bottom-10 right-4 animate-cloud-move-2 text-3xl select-none">☁️</div>
+          <div class="absolute top-16 right-16 opacity-30 text-2xl select-none">☁️</div>
+        </div>
+
+        <!-- Ground / Nest Shadow (Scales with chicken) -->
+        <div id="chicken-shadow" class="absolute bottom-6 w-32 h-6 bg-slate-800/15 rounded-full blur-sm transition-all duration-300"></div>
+
+        <!-- Interactive Chubby Chicken SVG Root Container -->
+        <div id="chicken-hero" class="relative z-20 cursor-pointer transition-transform duration-300 ease-out skin-yellow" style="--chicken-scale: 1.0; transform: scale(1.0);" title="Tap me to chirp!">
+          
+          <!-- Flying Sparkles Container for Level 4 / 5 -->
+          <div id="cosmic-aura" class="absolute -inset-8 pointer-events-none rounded-full hidden opacity-75 blur-md bg-gradient-to-tr from-pink-400 via-purple-400 to-cyan-300 animate-pulse"></div>
+
+          <!-- Chicken SVG Vector Graphic -->
+          <svg id="chicken-svg" width="170" height="170" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" class="overflow-visible filter drop-shadow-md">
+            <defs>
+              <!-- Body Gradient -->
+              <linearGradient id="bodyGradient" x1="20" y1="20" x2="140" y2="140" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="var(--body-grad-start, #FDE047)"/>
+                <stop offset="100%" stop-color="var(--body-grad-end, #EAB308)"/>
+              </linearGradient>
+              <!-- Wing Gradient -->
+              <linearGradient id="wingGradient" x1="10" y1="10" x2="50" y2="50" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="var(--body-grad-start, #FDE047)"/>
+                <stop offset="100%" stop-color="var(--wing-col, #FACC15)"/>
+              </linearGradient>
+              <!-- Crown Gold -->
+              <linearGradient id="goldCrown" x1="0" y1="0" x2="30" y2="30">
+                <stop offset="0%" stop-color="#FFE066"/>
+                <stop offset="100%" stop-color="#F59E0B"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Feet -->
+            <g id="feet" transform="translate(0, 0)">
+              <ellipse cx="62" cy="138" rx="10" ry="5" fill="#F97316"/>
+              <ellipse cx="98" cy="138" rx="10" ry="5" fill="#F97316"/>
+            </g>
+
+            <!-- Little Tail Feathers (Left-Back) -->
+            <path d="M 32 95 C 16 88 12 70 24 66 C 30 78 36 86 42 92 Z" fill="var(--body-grad-end, #EAB308)"/>
+
+            <!-- Main Chubby Round Body -->
+            <ellipse id="chicken-body" cx="80" cy="88" rx="56" ry="50" fill="url(#bodyGradient)" stroke="rgba(0,0,0,0.06)" stroke-width="2"/>
+
+            <!-- Fluffy Belly -->
+            <ellipse cx="80" cy="98" rx="38" ry="32" fill="var(--belly-col, #FEF08A)" opacity="0.85"/>
+
+            <!-- Comb (Top of Head) -->
+            <g id="comb" fill="var(--comb-col, #EF4444)">
+              <circle cx="68" cy="38" r="9"/>
+              <circle cx="80" cy="32" r="11"/>
+              <circle cx="92" cy="38" r="9"/>
+            </g>
+
+            <!-- Crown (Shown on Skin 4 Golden Royale & Skin 5 Holographic) -->
+            <g id="chicken-crown" class="hidden" transform="translate(62, 10)">
+              <polygon points="0,22 8,6 18,18 28,6 36,22" fill="url(#goldCrown)" stroke="#B45309" stroke-width="1.5"/>
+              <circle cx="8" cy="6" r="2.5" fill="#EF4444"/>
+              <circle cx="28" cy="6" r="2.5" fill="#3B82F6"/>
+              <circle cx="18" cy="18" r="2" fill="#10B981"/>
+            </g>
+
+            <!-- Beak & Wattle -->
+            <g id="head-features">
+              <!-- Wattle -->
+              <ellipse cx="80" cy="95" rx="5" ry="7" fill="var(--comb-col, #EF4444)"/>
+
+              <!-- Beak (Triangle) -->
+              <polygon points="70,80 90,80 80,94" fill="var(--beak-col, #F97316)" stroke="#EA580C" stroke-width="1.2"/>
+
+              <!-- Cheeks / Blush -->
+              <circle cx="53" cy="85" r="7" fill="#FB7185" opacity="0.55"/>
+              <circle cx="107" cy="85" r="7" fill="#FB7185" opacity="0.55"/>
+
+              <!-- Eyes (Normal Blinking) -->
+              <g id="eyes-normal" class="animate-blink" style="transform-origin: 80px 72px;">
+                <!-- Left Eye -->
+                <circle cx="61" cy="72" r="6" fill="#1E293B"/>
+                <circle cx="59" cy="70" r="2" fill="#FFFFFF"/>
+                <!-- Right Eye -->
+                <circle cx="99" cy="72" r="6" fill="#1E293B"/>
+                <circle cx="97" cy="70" r="2" fill="#FFFFFF"/>
+              </g>
+
+              <!-- Eyes (Dizzy @_@ shown on error) -->
+              <g id="eyes-dizzy" class="hidden" style="transform-origin: 80px 72px;">
+                <text x="61" y="77" font-size="14" font-weight="900" fill="#1E293B" text-anchor="middle" font-family="monospace">@</text>
+                <text x="99" y="77" font-size="14" font-weight="900" fill="#1E293B" text-anchor="middle" font-family="monospace">@</text>
+              </g>
+            </g>
+
+            <!-- Wings (Left & Right, Flappable) -->
+            <g id="wing-left" transform="translate(36, 88)" style="transform-origin: 10px 0px;">
+              <path d="M 0 0 C -12 6 -16 24 2 28 C 14 28 18 16 10 2 Z" fill="url(#wingGradient)" stroke="rgba(0,0,0,0.08)" stroke-width="1.5"/>
+            </g>
+            <g id="wing-right" transform="translate(112, 88)" style="transform-origin: 0px 0px;">
+              <path d="M 0 0 C 12 6 16 24 -2 28 C -14 28 -18 16 -10 2 Z" fill="url(#wingGradient)" stroke="rgba(0,0,0,0.08)" stroke-width="1.5"/>
+            </g>
+          </svg>
+
+          <!-- Flying Wing Flap Animation Target Overlay -->
+          <div id="wing-flap-indicator" class="absolute -top-3 -right-3 text-2xl hidden animate-bounce">💨</div>
+        </div>
+
+        <!-- Flying Flight Banner / Milestone Message -->
+        <div id="flight-milestone-toast" class="absolute top-2 px-4 py-2 rounded-2xl bg-amber-500 text-white font-fredoka font-bold text-sm shadow-xl shadow-amber-500/30 transform transition-all duration-300 scale-0 pointer-events-none z-30 flex items-center gap-2">
+          <span>🚀</span>
+          <span id="flight-milestone-text">CHICKEN TAKEOFF! Level Up!</span>
+          <span>🎉</span>
+        </div>
+      </div>
+
+      <!-- Explanation Card (Hidden by default, shown on wrong answer) -->
+      <div id="explanation-card" class="hidden w-full max-w-xl mx-auto my-3 p-4 bg-amber-50/95 border-2 border-amber-300 rounded-3xl shadow-xl backdrop-blur-md text-right transition-all" dir="rtl">
+        <div class="flex items-center justify-between border-b border-amber-200 pb-2 mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full">💡 הסבר פדגוגי</span>
+          <span id="correct-answer-badge" class="font-mono text-sm font-black text-emerald-700 bg-emerald-100 px-3 py-1 rounded-xl">תשובה: ...</span>
+        </div>
+        <p id="explanation-text" class="text-slate-800 text-sm leading-relaxed font-medium">
+          הסבר מפורט יופיע כאן...
+        </p>
+        <button id="continue-next-btn" type="button" class="mt-3 w-full py-2.5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2">
+          <span>המשך לשאלה הבאה</span>
+          <span class="text-xs opacity-75 font-normal">(לחץ Space או Enter)</span>
+        </button>
+      </div>
+
+      <!-- Question Card & Interactive Word Lookup Container -->
+      <section class="w-full max-w-xl mx-auto backdrop-blur-xl bg-white/90 border border-white/70 rounded-3xl p-5 sm:p-7 shadow-xl shadow-sky-950/5 transition-all">
+        
+        <!-- Category & Type Meta Header -->
+        <div class="flex items-center justify-between text-xs font-bold text-slate-400 mb-3 border-b border-slate-100 pb-2">
+          <div class="flex items-center gap-2">
+            <span id="question-category-tag" class="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-700 uppercase tracking-wider text-[11px] font-black border border-indigo-100">
+              Past Simple
+            </span>
+            <span id="question-type-tag" class="text-slate-400 font-medium">Positive Statement</span>
+          </div>
+          <div class="flex items-center gap-1 text-[11px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100" title="Tap any word in the sentence for Hebrew translation & speech!">
+            <span>💡 Tap words for Hebrew & audio</span>
+          </div>
+        </div>
+
+        <!-- Interactive Tokenized Sentence Area -->
+        <div class="my-4 min-h-[72px] flex items-center justify-center text-center">
+          <div id="sentence-display" class="text-lg sm:text-2xl font-bold text-slate-800 leading-relaxed tracking-wide select-none">
+            <!-- Dynamically injected word tokens and target blank input -->
+          </div>
+        </div>
+
+        <!-- Reference Word Bank & Submit Control -->
+        <div class="mt-5 pt-3 border-t border-slate-100 flex flex-col items-center gap-3">
+          <div class="w-full flex items-center justify-between text-xs text-slate-500 font-semibold px-1">
+            <span class="flex items-center gap-1.5">
+              <span>📦</span> Word Bank:
+            </span>
+            <span class="text-[11px] text-slate-400">Type or tap to fill • Enter to check</span>
+          </div>
+
+          <!-- Word Bank Reference Pills Container -->
+          <div id="word-bank-options" class="flex flex-wrap justify-center gap-2 w-full min-h-[40px]">
+            <!-- Dynamic word bank pills -->
+          </div>
+
+          <!-- Submit Action Button -->
+          <div class="w-full flex items-center justify-center pt-1">
+            <button id="btn-submit-answer" type="button" class="w-full sm:w-auto min-w-[220px] px-6 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 active:scale-95 transition-all flex items-center justify-center gap-2">
+              <span>Check / בדוק</span>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Immediate Grammar Feedback / Hint Bar -->
+        <div id="feedback-bar" class="mt-4 min-h-[36px] flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold transition-all duration-200 opacity-0 pointer-events-none bg-slate-50 border border-slate-200/80">
+          <div class="flex items-center gap-2" id="feedback-content">
+            <span id="feedback-icon" class="text-base">✨</span>
+            <span id="feedback-text" class="text-slate-700">Great job!</span>
+          </div>
+          <button id="btn-next-question" class="hidden ml-auto px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 active:scale-95 transition pointer-events-auto">
+            Next ➔
+          </button>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer with Tips & Keyboard Shortcuts -->
+    <footer class="w-full text-center py-2 text-xs text-slate-500 font-medium flex flex-wrap items-center justify-center gap-4">
+      <span class="flex items-center gap-1.5">
+        <kbd class="px-2 py-0.5 bg-white border border-slate-300 rounded-md shadow-xs text-[11px] font-mono text-slate-700">Enter</kbd>
+        <span>to Check</span>
+      </span>
+      <span>•</span>
+      <span class="flex items-center gap-1.5">
+        <kbd class="px-2 py-0.5 bg-white border border-slate-300 rounded-md shadow-xs text-[11px] font-mono text-slate-700">Space</kbd>
+        <span>for Next</span>
+      </span>
+      <span>•</span>
+      <span class="text-slate-600">Streak 10 unlocks flight & rare chicken skins!</span>
+      <span>•</span>
+      <button id="btn-open-guide" class="text-indigo-600 hover:underline font-bold">Grammar & Vocab Guide</button>
+    </footer>
+
+  </div>
+
+  <!-- Educational Guide & Vocab Explorer Modal -->
+  <div id="guide-modal" class="fixed inset-0 z-50 backdrop-blur-md bg-slate-900/60 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="w-full max-w-3xl bg-white rounded-3xl p-5 sm:p-7 shadow-2xl border border-white/50 max-h-[90vh] flex flex-col custom-scrollbar">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">📖</span>
+          <h2 class="font-fredoka text-xl font-bold text-slate-900">Grammar Flight Guide & Vocab Explorer</h2>
+        </div>
+        <button id="btn-close-guide" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-base transition">✕</button>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="flex items-center gap-2 my-3 border-b border-slate-100 pb-2">
+        <button id="tab-btn-rules" type="button" class="px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-900 text-white shadow-sm transition-all">
+          🎮 Rules & Grammar
+        </button>
+        <button id="tab-btn-vocab" type="button" class="px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all flex items-center gap-1.5">
+          <span>📚</span>
+          <span>Vocab Explorer (A1 & Band III)</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Rules & Grammar Content -->
+      <div id="tab-content-rules" class="flex-1 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed pr-1 custom-scrollbar">
+        <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200/80">
+          <h3 class="font-bold text-amber-900 text-sm mb-1">🎮 How to Play</h3>
+          <p>Answer English grammar questions correctly to feed your chubby chicken! With each correct answer, the chicken inflates by +5% scale (up to 2.2x) and lets out a joyful <strong>"Bawk-bawk-bawk!"</strong> cluck. Hit a <strong>10-answer streak</strong> to trigger the celebratory arpeggio flight takeoff, burst confetti, and promote your chicken to rare skin tiers!</p>
+        </div>
+
+        <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200/80">
+          <h3 class="font-bold text-emerald-900 text-sm mb-1">✍️ Active Writing & Word Bank</h3>
+          <p>Type your answer directly into the sentence blank and press <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono text-[10px]">Enter</kbd> (or tap <strong>Check / בדוק</strong>). You can also tap any reference pill in the <strong>Word Bank</strong> below to auto-fill the blank instantly.</p>
+        </div>
+
+        <div class="p-3 bg-purple-50 rounded-2xl border border-purple-200/80">
+          <h3 class="font-bold text-purple-900 text-sm mb-1">🎯 Two Rich Learning Levels</h3>
+          <p>Switch anytime between <strong>🟢 Level 1: A1 Beginner</strong> (everyday vocabulary, home, family, school, and daily routines) and <strong>🟣 Level 2: Band III Grade 12</strong> (official Ministry Bagrut exam vocabulary & idioms).</p>
+        </div>
+
+        <div class="p-3 bg-indigo-50 rounded-2xl border border-indigo-200/80">
+          <h3 class="font-bold text-indigo-900 text-sm mb-1">🔍 Interactive Hebrew Dictionary & Audio</h3>
+          <p>Every word in the displayed sentence is an interactive token. Tap any word to listen to native English speech pronunciation and inspect its grammatical part of speech and Hebrew translation.</p>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="font-bold text-slate-800 text-sm">✨ 7 Core Grammar Modules Included in Both Levels:</h3>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Past Simple:</strong> Regular/irregular verbs, <em>did / did not</em> negation and question inversion.</li>
+            <li><strong>Present Simple:</strong> Third-person <em>-s/-es</em>, <em>do / does</em> auxiliaries for habits and daily life.</li>
+            <li><strong>Future Simple:</strong> <em>Will / will not</em> predictive assertions and inquiries.</li>
+            <li><strong>Present Progressive:</strong> Auxiliary <em>be (am/is/are)</em> + <em>-ing</em> participle for concurrent actions.</li>
+            <li><strong>Articles (A vs An):</strong> Phonetic vowel sound contrast (e.g. <em>an orange, an egg, an incentive</em> vs <em>a dog, a firm, a unique</em>).</li>
+            <li><strong>State & Location (Copula Be):</strong> Non-action descriptors, spatial relations, and adjective complements.</li>
+            <li><strong>Prepositions & Idioms:</strong> High-frequency prepositions (<em>at, behind, by, for</em>) and collocations (<em>step by step, in advance, at the expense of</em>).</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Tab 2: Searchable Vocab Explorer -->
+      <div id="tab-content-vocab" class="hidden flex-1 flex flex-col overflow-hidden pr-1">
+        <div class="mb-3">
+          <input type="text" id="vocab-search-input" placeholder="🔍 Search English word or Hebrew translation..." class="w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-medium">
+        </div>
+        <div id="vocab-list-container" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar max-h-[50vh]">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+        <span class="text-xs text-slate-400 font-medium">100% Client-Side • Web Audio & Speech</span>
+        <button id="btn-close-guide-2" class="px-5 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs sm:text-sm shadow hover:bg-slate-800 active:scale-95 transition">
+          Close & Play!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC ENGINE -->
+  <script>
+    /* ============================================================================
+       BAND III VOCABULARY DICTIONARY (WITH PREPOSITIONS & SET PHRASES)
+       Extended to provide comprehensive lookup for every word in questions.
+       ============================================================================ */
+    const VOCAB_DICTIONARY = {
+      "a": { hebrew: "תווית סתמית (לפני עיצור)", pos: "art" },
+      "about": { hebrew: "אודות / בערך", pos: "prep" },
+      "acceptable": { hebrew: "מקובל", pos: "adj" },
+      "accumulated": { hebrew: "נצבר / נאסף", pos: "adj" },
+      "accurate": { hebrew: "מדויק", pos: "adj" },
+      "achievement": { hebrew: "הישג", pos: "noun" },
+      "acknowledge": { hebrew: "להכיר ב- / להודות ב-", pos: "v" },
+      "actions": { hebrew: "מעשים", pos: "noun" },
+      "administration": { hebrew: "הנהלה, מנהל", pos: "noun" },
+      "administrative": { hebrew: "מנהלי / אדמיניסטרטיבי", pos: "adj" },
+      "advance": { hebrew: "הקדמה, מראש", pos: "noun" },
+      "after": { hebrew: "אחרי / לאחר", pos: "prep" },
+      "afternoon": { hebrew: "אחר הצהריים", pos: "n" },
+      "against": { hebrew: "נגד", pos: "prep" },
+      "agency": { hebrew: "סוכנות", pos: "n" },
+      "aggressor": { hebrew: "תוקפן", pos: "n" },
+      "ago": { hebrew: "לפני (זמן)", pos: "adv" },
+      "agreements": { hebrew: "הסכמים", pos: "n" },
+      "all": { hebrew: "כל, הכל", pos: "det" },
+      "all in all": { hebrew: "בסך הכל", pos: "phrase" },
+      "already": { hebrew: "כבר", pos: "adv" },
+      "altered": { hebrew: "השתנה / שונה", pos: "v" },
+      "altering": { hebrew: "משנים, עורכים שינוי", pos: "verb" },
+      "always": { hebrew: "תמיד", pos: "adv" },
+      "am": { hebrew: "אני (פועל להיות)", pos: "verb" },
+      "among other things": { hebrew: "בין היתר", pos: "phrase" },
+      "amongst": { hebrew: "בין (אנשים/דברים)", pos: "prep" },
+      "an": { hebrew: "תווית סתמית (לפני תנועה)", pos: "art" },
+      "and": { hebrew: "ו- (ו' החיבור)", pos: "conj" },
+      "announcement": { hebrew: "הודעה / הצהרה", pos: "n" },
+      "answer": { hebrew: "תשובה / לענות", pos: "n" },
+      "any": { hebrew: "כל / שום / כלשהו", pos: "det" },
+      "apple": { hebrew: "תפוח", pos: "noun" },
+      "apples": { hebrew: "תפוחים", pos: "noun" },
+      "applicant": { hebrew: "מועמד / מגיש בקשה", pos: "n" },
+      "approve": { hebrew: "לאשר, להסכים", pos: "verb" },
+      "are": { hebrew: "הינם, פועל להיות ברבים", pos: "verb" },
+      "around": { hebrew: "מסביב ל-", pos: "prep" },
+      "arrive": { hebrew: "להגיע", pos: "verb" },
+      "as": { hebrew: "כמו / כפי ש- / כש-", pos: "prep" },
+      "as a matter of fact": { hebrew: "לאמיתו של דבר, למעשה", pos: "phrase" },
+      "as a whole": { hebrew: "ככלל, בשלמותו", pos: "phrase" },
+      "assets": { hebrew: "נכסים", pos: "n" },
+      "at": { hebrew: "ב-, בנקודה מסוימת", pos: "prep" },
+      "at the expense of": { hebrew: "על חשבון של", pos: "phrase" },
+      "attract": { hebrew: "למשוך", pos: "verb" },
+      "authentic": { hebrew: "אותנטי / מקורי", pos: "adj" },
+      "authorities": { hebrew: "רשויות", pos: "n" },
+      "baby": { hebrew: "תינוק", pos: "noun" },
+      "backup": { hebrew: "גיבוי", pos: "n" },
+      "bag": { hebrew: "תיק", pos: "noun" },
+      "bank": { hebrew: "בנק", pos: "n" },
+      "bark": { hebrew: "לנבוח", pos: "verb" },
+      "barking": { hebrew: "נובח", pos: "verb" },
+      "barrier": { hebrew: "מחסום", pos: "noun" },
+      "be": { hebrew: "להיות", pos: "verb" },
+      "bear in mind": { hebrew: "לקחת בחשבון, לזכור", pos: "phrase" },
+      "before": { hebrew: "לפני", pos: "prep" },
+      "behind": { hebrew: "מאחורי", pos: "prep" },
+      "better off": { hebrew: "במצב טוב יותר", pos: "phrase" },
+      "bicycle": { hebrew: "אופניים", pos: "n" },
+      "big": { hebrew: "גדול", pos: "adj" },
+      "bird": { hebrew: "ציפור", pos: "n" },
+      "birds": { hebrew: "ציפורים", pos: "n" },
+      "birthday": { hebrew: "יום הולדת", pos: "noun" },
+      "blue": { hebrew: "כחול", pos: "adj" },
+      "board": { hebrew: "מועצת מנהלים; לוח", pos: "noun" },
+      "book": { hebrew: "ספר", pos: "noun" },
+      "books": { hebrew: "ספרים", pos: "noun" },
+      "bought": { hebrew: "קנה / קנתה (עבר)", pos: "v" },
+      "boundaries": { hebrew: "גבולות", pos: "noun" },
+      "box": { hebrew: "קופסה", pos: "n" },
+      "boy": { hebrew: "ילד", pos: "noun" },
+      "boys": { hebrew: "ילדים, בנים", pos: "noun" },
+      "bread": { hebrew: "לחם", pos: "n" },
+      "breakfast": { hebrew: "ארוחת בוקר", pos: "noun" },
+      "brother": { hebrew: "אח", pos: "noun" },
+      "budget": { hebrew: "תקציב", pos: "noun" },
+      "built": { hebrew: "נבנה (בעבר)", pos: "verb" },
+      "bus": { hebrew: "אוטובוס", pos: "noun" },
+      "buy": { hebrew: "לקנות", pos: "v" },
+      "by": { hebrew: "על ידי, ליד, באמצעות", pos: "prep" },
+      "by contrast": { hebrew: "לעומת זאת, בניגוד לכך", pos: "phrase" },
+      "by far": { hebrew: "בהרבה, במידה רבה", pos: "phrase" },
+      "by means of": { hebrew: "באמצעות, על ידי", pos: "phrase" },
+      "by no means": { hebrew: "בשום פנים ואופן", pos: "phrase" },
+      "cake": { hebrew: "עוגה", pos: "n" },
+      "call": { hebrew: "להתקשר, לקרוא", pos: "verb" },
+      "can": { hebrew: "יכול", pos: "modal" },
+      "candidates": { hebrew: "מועמדים", pos: "noun" },
+      "car": { hebrew: "מכונית", pos: "n" },
+      "cat": { hebrew: "חתול", pos: "noun" },
+      "center": { hebrew: "מרכז", pos: "noun" },
+      "central": { hebrew: "מרכזי", pos: "adj" },
+      "challenge": { hebrew: "אתגר", pos: "noun" },
+      "changed": { hebrew: "שינה (בעבר)", pos: "verb" },
+      "chemical": { hebrew: "כימי", pos: "adj" },
+      "chicken": { hebrew: "תרנגולת, עוף", pos: "noun" },
+      "circumstances": { hebrew: "נסיבות", pos: "noun" },
+      "city": { hebrew: "עיר", pos: "n" },
+      "civic": { hebrew: "אזרחי", pos: "adj" },
+      "class": { hebrew: "כיתה / שיעור", pos: "n" },
+      "clause": { hebrew: "סעיף (בחוזה)", pos: "n" },
+      "clean": { hebrew: "לנקות / נקי", pos: "v" },
+      "clear": { hebrew: "ברור, בהיר", pos: "adj" },
+      "climate": { hebrew: "אקלים", pos: "n" },
+      "clock": { hebrew: "שעון", pos: "n" },
+      "cold": { hebrew: "קר / קור", pos: "adj" },
+      "colleague": { hebrew: "עמית, קולגה", pos: "noun" },
+      "comfort": { hebrew: "נוחות", pos: "noun" },
+      "commander": { hebrew: "מפקד", pos: "noun" },
+      "committee": { hebrew: "ועדה", pos: "noun" },
+      "community": { hebrew: "קהילה", pos: "noun" },
+      "company": { hebrew: "חברה", pos: "noun" },
+      "completely": { hebrew: "לחלוטין", pos: "adv" },
+      "complex": { hebrew: "מורכב", pos: "adj" },
+      "compliance": { hebrew: "ציות / עמידה בתקנים", pos: "n" },
+      "component": { hebrew: "מרכיב, רכיב", pos: "noun" },
+      "components": { hebrew: "רכיבים", pos: "n" },
+      "computer": { hebrew: "מחשב", pos: "noun" },
+      "concluded": { hebrew: "הסיק, סיכם (בעבר)", pos: "verb" },
+      "conclusion": { hebrew: "מסקנה", pos: "noun" },
+      "conduct": { hebrew: "לבצע / לנהל / התנהגות", pos: "v" },
+      "conducting": { hebrew: "מבצע, עורך", pos: "verb" },
+      "conference": { hebrew: "ועידה / כנס", pos: "n" },
+      "confident": { hebrew: "בטוח בעצמו, משוכנע", pos: "adj" },
+      "confidential": { hebrew: "סודי, חסוי", pos: "adj" },
+      "confirm": { hebrew: "לאשר", pos: "verb" },
+      "considerably": { hebrew: "באופן ניכר / במידה רבה", pos: "adv" },
+      "constitutes": { hebrew: "מהווה / מייצג", pos: "v" },
+      "consultants": { hebrew: "יועצים", pos: "n" },
+      "container": { hebrew: "מיכל / קונטיינר", pos: "n" },
+      "contracts": { hebrew: "חוזים", pos: "noun" },
+      "conventional": { hebrew: "מקובל, שגרתי", pos: "adj" },
+      "cooking": { hebrew: "מבשל / בישול", pos: "v" },
+      "cooperation": { hebrew: "שיתוף פעולה", pos: "n" },
+      "cope": { hebrew: "להתמודד", pos: "v" },
+      "coping": { hebrew: "מתמודדים", pos: "verb" },
+      "corporate": { hebrew: "תאגידי / עסקי", pos: "adj" },
+      "corporation": { hebrew: "תאגיד / חברה", pos: "n" },
+      "counting": { hebrew: "סופר / ספירה", pos: "v" },
+      "crisis": { hebrew: "משבר", pos: "n" },
+      "criteria": { hebrew: "קריטריונים / אמות מידה", pos: "n" },
+      "crop": { hebrew: "יבול", pos: "n" },
+      "crucial": { hebrew: "מכריע / קריטי", pos: "adj" },
+      "current": { hebrew: "נוכחי / שוטף", pos: "adj" },
+      "currently": { hebrew: "כרגע / כיום", pos: "adv" },
+      "dan": { hebrew: "דן (שם פרטי)", pos: "noun" },
+      "data": { hebrew: "נתונים / מידע", pos: "n" },
+      "date": { hebrew: "תאריך, מועד", pos: "noun" },
+      "day": { hebrew: "יום", pos: "noun" },
+      "days": { hebrew: "ימים", pos: "n" },
+      "debate": { hebrew: "ויכוח / דיבייט", pos: "n" },
+      "debating": { hebrew: "מתווכחים / דנים", pos: "v" },
+      "debt": { hebrew: "חוב", pos: "noun" },
+      "decade": { hebrew: "עשור", pos: "n" },
+      "decision": { hebrew: "החלטה", pos: "n" },
+      "decrease": { hebrew: "להפחית, לצמצם", pos: "verb" },
+      "define": { hebrew: "להגדיר", pos: "verb" },
+      "delegates": { hebrew: "נציגים / צירים", pos: "n" },
+      "department": { hebrew: "מחלקה", pos: "noun" },
+      "deployment": { hebrew: "פריסה / הצבה", pos: "n" },
+      "desk": { hebrew: "שולחן כתיבה", pos: "noun" },
+      "despite": { hebrew: "למרות", pos: "prep" },
+      "developing": { hebrew: "מפתח / מתפתח", pos: "v" },
+      "device": { hebrew: "מכשיר, התקן", pos: "noun" },
+      "devices": { hebrew: "מכשירים", pos: "n" },
+      "did": { hebrew: "עשה, פועל עזר לעבר", pos: "verb" },
+      "dilemma": { hebrew: "דילמה / התלבטות", pos: "n" },
+      "dinner": { hebrew: "ארוחת ערב", pos: "n" },
+      "director": { hebrew: "מנהל, במאי", pos: "noun" },
+      "directors": { hebrew: "דירקטורים / מנהלים", pos: "n" },
+      "discovered": { hebrew: "גילה / התגלה", pos: "v" },
+      "discovery": { hebrew: "תגלית", pos: "n" },
+      "displayed": { hebrew: "הוצג / הציג", pos: "v" },
+      "dispute": { hebrew: "מחלוקת / סכסוך", pos: "n" },
+      "distributes": { hebrew: "מחלק, מפיץ", pos: "verb" },
+      "district": { hebrew: "מחוז", pos: "noun" },
+      "doctor": { hebrew: "רופא", pos: "n" },
+      "documentation": { hebrew: "תיעוד", pos: "n" },
+      "does": { hebrew: "עושה, פועל עזר", pos: "verb" },
+      "dog": { hebrew: "כלב", pos: "noun" },
+      "doing": { hebrew: "עושה", pos: "v" },
+      "door": { hebrew: "דלת", pos: "noun" },
+      "draft": { hebrew: "טיוטה", pos: "noun" },
+      "drink": { hebrew: "לשתות", pos: "verb" },
+      "drinks": { hebrew: "שותה", pos: "verb" },
+      "drive": { hebrew: "לנהוג / נסיעה", pos: "v" },
+      "drives": { hebrew: "נוהג", pos: "v" },
+      "due to": { hebrew: "עקב, בגלל", pos: "phrase" },
+      "during": { hebrew: "במהלך / במשך", pos: "prep" },
+      "east": { hebrew: "מזרח", pos: "n" },
+      "easy": { hebrew: "קל / פשוט", pos: "adj" },
+      "eat": { hebrew: "לאכול", pos: "verb" },
+      "eating": { hebrew: "אוכל (בהווה)", pos: "v" },
+      "economic": { hebrew: "כלכלי", pos: "adj" },
+      "effective": { hebrew: "יעיל / אפקטיבי", pos: "adj" },
+      "egg": { hebrew: "ביצה", pos: "noun" },
+      "eight": { hebrew: "שמונה", pos: "num" },
+      "eilat": { hebrew: "אילת", pos: "propn" },
+      "elephant": { hebrew: "פיל", pos: "noun" },
+      "eliminate": { hebrew: "לחסל / להסיר", pos: "v" },
+      "email": { hebrew: "אימייל / דוא״ל", pos: "n" },
+      "emergency": { hebrew: "חירום", pos: "noun" },
+      "engineer": { hebrew: "מהנדס", pos: "noun" },
+      "engineering": { hebrew: "הנדסה", pos: "noun" },
+      "english": { hebrew: "אנגלית", pos: "noun" },
+      "entirely": { hebrew: "לחלוטין / לגמרי", pos: "adv" },
+      "environmental": { hebrew: "סביבתי", pos: "adj" },
+      "established": { hebrew: "הקימו, ביססו", pos: "verb" },
+      "ethical": { hebrew: "מוסרי, אתי", pos: "adj" },
+      "evaluating": { hebrew: "מעריך / בוחן", pos: "v" },
+      "evening": { hebrew: "ערב", pos: "n" },
+      "every": { hebrew: "כל", pos: "adj" },
+      "evidence": { hebrew: "ראיות / הוכחות", pos: "n" },
+      "exact": { hebrew: "מדויק", pos: "adj" },
+      "excessive": { hebrew: "מוגזם / עודף", pos: "adj" },
+      "excited": { hebrew: "נרגש", pos: "adj" },
+      "executive": { hebrew: "מנהל, בכיר", pos: "noun" },
+      "expenditures": { hebrew: "הוצאות (כספיות)", pos: "n" },
+      "expense": { hebrew: "הוצאה, מחיר", pos: "noun" },
+      "experts": { hebrew: "מומחים", pos: "n" },
+      "external": { hebrew: "חיצוני", pos: "adj" },
+      "faced": { hebrew: "התמודד עם / עמד בפני", pos: "v" },
+      "facilitate": { hebrew: "להקל / לאפשר", pos: "v" },
+      "facility": { hebrew: "מתקן, מבנה", pos: "noun" },
+      "fails": { hebrew: "נכשל", pos: "v" },
+      "family": { hebrew: "משפחה", pos: "noun" },
+      "fast": { hebrew: "מהר / מהיר", pos: "adv" },
+      "father": { hebrew: "אבא", pos: "n" },
+      "favor": { hebrew: "טובה / בעד", pos: "n" },
+      "files": { hebrew: "קבצים, תיקים", pos: "noun" },
+      "finalize": { hebrew: "לסיים, לגבש סופית", pos: "verb" },
+      "financial": { hebrew: "פיננסי, כספי", pos: "adj" },
+      "findings": { hebrew: "ממצאים", pos: "noun" },
+      "firm": { hebrew: "חברה, פירמה; יציב/איתן", pos: "noun/adj" },
+      "flowers": { hebrew: "פרחים", pos: "n" },
+      "football": { hebrew: "כדורגל", pos: "n" },
+      "for": { hebrew: "בשביל, למען, עבור", pos: "prep" },
+      "for the sake of": { hebrew: "למען, לטובת", pos: "phrase" },
+      "forget": { hebrew: "לשכוח", pos: "v" },
+      "fresh": { hebrew: "טרי / רענן", pos: "adj" },
+      "friday": { hebrew: "יום שישי", pos: "n" },
+      "from": { hebrew: "מ-, מתוך", pos: "prep" },
+      "from time to time": { hebrew: "מפעם לפעם, לעיתים", pos: "phrase" },
+      "fundamental": { hebrew: "בסיסי, יסודי", pos: "adj" },
+      "furthermore": { hebrew: "יתרה מזאת, נוסף על כך", pos: "adv" },
+      "future": { hebrew: "עתיד; עתידי", pos: "noun/adj" },
+      "gains": { hebrew: "רווחים / הישגים", pos: "n" },
+      "game": { hebrew: "משחק", pos: "noun" },
+      "games": { hebrew: "משחקים", pos: "noun" },
+      "garden": { hebrew: "גינה", pos: "n" },
+      "generate": { hebrew: "ליצור, לחולל, לייצר", pos: "verb" },
+      "generator": { hebrew: "גנרטור, מחולל", pos: "noun" },
+      "generators": { hebrew: "גנרטורים / מחוללים", pos: "n" },
+      "gift": { hebrew: "מתנה", pos: "noun" },
+      "go": { hebrew: "ללכת", pos: "verb" },
+      "goes": { hebrew: "הולך, נוסע", pos: "verb" },
+      "good": { hebrew: "טוב", pos: "adj" },
+      "government": { hebrew: "ממשלה", pos: "n" },
+      "grandma": { hebrew: "סבתא", pos: "noun" },
+      "grandparents": { hebrew: "סבא וסבתא", pos: "n" },
+      "green": { hebrew: "ירוק", pos: "adj" },
+      "guidelines": { hebrew: "הנחיות, קווים מנחים", pos: "noun" },
+      "hands": { hebrew: "ידיים", pos: "n" },
+      "happy": { hebrew: "שמח", pos: "adj" },
+      "has": { hebrew: "יש לו/לה", pos: "verb" },
+      "have": { hebrew: "יש לי, לקבל", pos: "verb" },
+      "having": { hebrew: "עושה / מקיים / יש לו", pos: "v" },
+      "he": { hebrew: "הוא", pos: "pron" },
+      "hear": { hebrew: "לשמוע", pos: "v" },
+      "help": { hebrew: "עזרה / לעזור", pos: "v" },
+      "hidden": { hebrew: "מוסתר, חבוי", pos: "adj" },
+      "hiding": { hebrew: "מתחבא", pos: "verb" },
+      "hierarchy": { hebrew: "היררכיה / סולם דרגות", pos: "n" },
+      "hill": { hebrew: "גבעה", pos: "noun" },
+      "his": { hebrew: "שלו", pos: "pron" },
+      "home": { hebrew: "בית / הביתה", pos: "n" },
+      "homework": { hebrew: "שיעורי בית", pos: "n" },
+      "hospital": { hebrew: "בית חולים", pos: "n" },
+      "hot": { hebrew: "חם", pos: "adj" },
+      "hour": { hebrew: "שעה", pos: "n" },
+      "house": { hebrew: "בית", pos: "noun" },
+      "how": { hebrew: "כיצד, איך", pos: "adv" },
+      "i": { hebrew: "אני", pos: "pron" },
+      "illustrate": { hebrew: "להמחיש, להדגים", pos: "verb" },
+      "impact": { hebrew: "השפעה / להשפיע", pos: "n" },
+      "implement": { hebrew: "להטמיע, ליישם", pos: "verb" },
+      "in": { hebrew: "בתוך, ב-", pos: "prep" },
+      "in advance": { hebrew: "מראש", pos: "phrase" },
+      "in favor of": { hebrew: "לטובת, בעד", pos: "phrase" },
+      "in light of": { hebrew: "לאור האמור לעיל", pos: "phrase" },
+      "in relation to": { hebrew: "ביחס ל-", pos: "phrase" },
+      "in the long run": { hebrew: "לטווח הרחוק", pos: "phrase" },
+      "in the meantime": { hebrew: "בינתיים", pos: "phrase" },
+      "incentive": { hebrew: "תמריץ", pos: "noun" },
+      "independent": { hebrew: "עצמאי", pos: "adj" },
+      "inevitable": { hebrew: "בלתי נמנע", pos: "adj" },
+      "inheritance": { hebrew: "ירושה", pos: "noun" },
+      "initial": { hebrew: "ראשוני", pos: "adj" },
+      "innovative": { hebrew: "חדשני", pos: "adj" },
+      "inside": { hebrew: "בתוך / בפנים", pos: "prep" },
+      "institution": { hebrew: "מוסד", pos: "n" },
+      "institutions": { hebrew: "מוסדות", pos: "n" },
+      "insufficient": { hebrew: "לא מספק / בלתי מספיק", pos: "adj" },
+      "interesting": { hebrew: "מעניין", pos: "adj" },
+      "internal": { hebrew: "פנימי", pos: "adj" },
+      "international": { hebrew: "בינלאומי", pos: "adj" },
+      "investment": { hebrew: "השקעה", pos: "noun" },
+      "is": { hebrew: "הינו, פועל להיות ליחיד", pos: "verb" },
+      "it": { hebrew: "זה, זו", pos: "pron" },
+      "its": { hebrew: "שלו / שלה (של עצם)", pos: "pron" },
+      "judge": { hebrew: "שופט", pos: "n" },
+      "key": { hebrew: "מפתח", pos: "noun" },
+      "keys": { hebrew: "מפתחות", pos: "n" },
+      "kids": { hebrew: "ילדים", pos: "noun" },
+      "kitchen": { hebrew: "מטבח", pos: "n" },
+      "laboratory": { hebrew: "מעבדה", pos: "noun" },
+      "last": { hebrew: "שעבר, אחרון", pos: "adj" },
+      "lead": { hebrew: "להוביל / להנהיג", pos: "v" },
+      "leading": { hebrew: "מוביל / ראשון במעלה", pos: "adj" },
+      "leaked": { hebrew: "דלף / הודלף", pos: "v" },
+      "learn": { hebrew: "ללמוד", pos: "verb" },
+      "legal": { hebrew: "חוקי / משפטי", pos: "adj" },
+      "legislation": { hebrew: "חקיקה", pos: "n" },
+      "legitimate": { hebrew: "לגיטימי / מוצדק", pos: "adj" },
+      "light": { hebrew: "אור / קל", pos: "n" },
+      "like": { hebrew: "אוהב, מחבב", pos: "verb" },
+      "listen": { hebrew: "להקשיב", pos: "v" },
+      "live": { hebrew: "לגור, לחיות", pos: "verb" },
+      "lives": { hebrew: "גר, מתגורר", pos: "verb" },
+      "lock": { hebrew: "מנעול", pos: "noun" },
+      "long": { hebrew: "ארוך", pos: "adj" },
+      "look": { hebrew: "תסתכל!, הבט!", pos: "verb/interj" },
+      "louder": { hebrew: "בקול רם יותר", pos: "adj" },
+      "lovely": { hebrew: "מקסים / נהדר", pos: "adj" },
+      "lunch": { hebrew: "ארוחת צהריים", pos: "n" },
+      "made": { hebrew: "עשה / יצר (עבר)", pos: "v" },
+      "main": { hebrew: "מרכזי, עיקרי", pos: "adj" },
+      "maintain": { hebrew: "לתחזק / לשמר", pos: "v" },
+      "market": { hebrew: "שוק", pos: "n" },
+      "matter": { hebrew: "משנים, חשובים", pos: "verb" },
+      "me": { hebrew: "אותי, לי", pos: "pron" },
+      "means": { hebrew: "אמצעים, כלי", pos: "noun" },
+      "mechanism": { hebrew: "מנגנון", pos: "noun" },
+      "meet": { hebrew: "לפגוש, לעמוד בדרישות", pos: "verb" },
+      "methodology": { hebrew: "מתודולוגיה / שיטת עבודה", pos: "n" },
+      "milk": { hebrew: "חלב", pos: "noun" },
+      "model": { hebrew: "דגם, מודל", pos: "noun" },
+      "modern": { hebrew: "מודרני", pos: "adj" },
+      "moment": { hebrew: "רגע", pos: "noun" },
+      "monitors": { hebrew: "עוקב אחר / מפקח", pos: "v" },
+      "month": { hebrew: "חודש", pos: "n" },
+      "morning": { hebrew: "בוקר", pos: "noun" },
+      "most": { hebrew: "ביותר", pos: "adv" },
+      "mother": { hebrew: "אמא", pos: "n" },
+      "mountain": { hebrew: "הר", pos: "n" },
+      "movie": { hebrew: "סרט", pos: "n" },
+      "must": { hebrew: "חייב, מוכרח", pos: "modal" },
+      "mutual": { hebrew: "הדדי", pos: "adj" },
+      "my": { hebrew: "שלי", pos: "pron" },
+      "near": { hebrew: "ליד / קרוב ל-", pos: "prep" },
+      "nevertheless": { hebrew: "אף על פי כן, עם זאת", pos: "adv" },
+      "new": { hebrew: "חדש", pos: "adj" },
+      "newly": { hebrew: "זה מקרוב / לאחרונה", pos: "adv" },
+      "next": { hebrew: "הבא", pos: "adj" },
+      "night": { hebrew: "לילה", pos: "n" },
+      "no": { hebrew: "שום, לא, כלל לא", pos: "det/adv" },
+      "not": { hebrew: "לא", pos: "adv" },
+      "now": { hebrew: "עכשיו, כעת", pos: "adv" },
+      "nuclear": { hebrew: "גרעיני", pos: "adj" },
+      "o": { hebrew: "בשעה (o'clock)", pos: "n" },
+      "obligations": { hebrew: "התחייבויות", pos: "n" },
+      "oclock": { hebrew: "בדיוק (בשעה)", pos: "adv" },
+      "of": { hebrew: "של", pos: "prep" },
+      "offered": { hebrew: "הציעה (בעבר)", pos: "verb" },
+      "official": { hebrew: "רשמי; פקיד רשמי", pos: "adj/noun" },
+      "officially": { hebrew: "באופן רשמי", pos: "adv" },
+      "often": { hebrew: "לעיתים קרובות", pos: "adv" },
+      "old": { hebrew: "ישן", pos: "adj" },
+      "on": { hebrew: "על, ב-", pos: "prep" },
+      "opportunity": { hebrew: "הזדמנות", pos: "noun" },
+      "oppose": { hebrew: "להתנגד", pos: "verb" },
+      "orange": { hebrew: "כתום", pos: "adj" },
+      "order": { hebrew: "סדר / הזמנה / הוראה", pos: "n" },
+      "organization": { hebrew: "ארגון", pos: "n" },
+      "otherwise": { hebrew: "אחרת, חוץ מזה", pos: "adv" },
+      "our": { hebrew: "שלנו", pos: "pron" },
+      "outcomes": { hebrew: "תוצאות", pos: "n" },
+      "outside": { hebrew: "בחוץ", pos: "adv" },
+      "over the course of": { hebrew: "במהלך", pos: "phrase" },
+      "overall": { hebrew: "כולל, כללי", pos: "adj" },
+      "park": { hebrew: "פארק", pos: "noun" },
+      "partnerships": { hebrew: "שותפויות", pos: "n" },
+      "perception": { hebrew: "תפיסה, הבנה", pos: "noun" },
+      "physics": { hebrew: "פיזיקה", pos: "n" },
+      "plant": { hebrew: "מפעל, תחנה; צמח", pos: "noun" },
+      "play": { hebrew: "לשחק", pos: "verb" },
+      "playing": { hebrew: "משחק", pos: "verb" },
+      "policy": { hebrew: "מדיניות", pos: "noun" },
+      "positioned": { hebrew: "ממוקם / הוצב", pos: "adj" },
+      "predict": { hebrew: "לחזות / לצפות", pos: "v" },
+      "present": { hebrew: "נוכחי, הווה", pos: "adj" },
+      "primary": { hebrew: "עיקרי / ראשי", pos: "adj" },
+      "profit": { hebrew: "רווח", pos: "noun" },
+      "profits": { hebrew: "רווחים", pos: "noun" },
+      "promise": { hebrew: "הבטחה / להבטיח", pos: "v" },
+      "proper": { hebrew: "נאות / מתאים", pos: "adj" },
+      "proportions": { hebrew: "פרופורציות, מידות", pos: "noun" },
+      "proposal": { hebrew: "הצעה", pos: "noun" },
+      "protocol": { hebrew: "פרוטוקול / נוהל", pos: "n" },
+      "proved": { hebrew: "הוכיח / התברר כ-", pos: "v" },
+      "public": { hebrew: "ציבורי / ציבור", pos: "adj" },
+      "quarter": { hebrew: "רבעון, רבע", pos: "noun" },
+      "question": { hebrew: "שאלה", pos: "n" },
+      "rain": { hebrew: "גשם", pos: "n" },
+      "rapid": { hebrew: "מהיר", pos: "adj" },
+      "rapidly": { hebrew: "במהירות", pos: "adv" },
+      "rationale": { hebrew: "רציונל / היגיון מנחה", pos: "n" },
+      "read": { hebrew: "לקרוא", pos: "verb" },
+      "reading": { hebrew: "קורא", pos: "verb" },
+      "ready": { hebrew: "מוכן", pos: "adj" },
+      "receiving": { hebrew: "קבלת, קבלה של", pos: "verb" },
+      "recover": { hebrew: "להתאושש / להחלים", pos: "v" },
+      "recruit": { hebrew: "לגייס", pos: "verb" },
+      "recruiting": { hebrew: "מגייס (בהווה)", pos: "verb" },
+      "red": { hebrew: "אדום", pos: "adj" },
+      "reform": { hebrew: "רפורמה / תיקון", pos: "n" },
+      "regarding": { hebrew: "בנוגע ל- / לגבי", pos: "prep" },
+      "regulations": { hebrew: "תקנות / תקנונים", pos: "n" },
+      "reinforce": { hebrew: "לחזק, לתגבר", pos: "verb" },
+      "reinforced": { hebrew: "חיזק / מחוזק", pos: "v" },
+      "reliable": { hebrew: "אמין, מהימן", pos: "adj" },
+      "remain": { hebrew: "להישאר", pos: "v" },
+      "remained": { hebrew: "נותרו, נשארו", pos: "verb" },
+      "remarkably": { hebrew: "באופן יוצא דופן", pos: "adv" },
+      "research": { hebrew: "מחקר", pos: "n" },
+      "researcher": { hebrew: "חוקר", pos: "noun" },
+      "researchers": { hebrew: "חוקרים", pos: "n" },
+      "resident": { hebrew: "תושב", pos: "noun" },
+      "residents": { hebrew: "תושבים", pos: "noun" },
+      "resource": { hebrew: "משאב", pos: "noun" },
+      "resources": { hebrew: "משאבים", pos: "noun" },
+      "restaurant": { hebrew: "מסעדה", pos: "n" },
+      "restructuring": { hebrew: "ארגון מחדש", pos: "n" },
+      "results": { hebrew: "תוצאות", pos: "noun" },
+      "review": { hebrew: "לסקור / סקירה", pos: "v" },
+      "revised": { hebrew: "מתוקן / מעודכן", pos: "adj" },
+      "revision": { hebrew: "תיקון, בדיקה מחדש", pos: "noun" },
+      "right": { hebrew: "בדיוק; ימין; נכון", pos: "adv/adj" },
+      "ring": { hebrew: "לצלצל / טבעת", pos: "v" },
+      "risk": { hebrew: "סיכון / להסתכן", pos: "n" },
+      "rules": { hebrew: "כללים, חוקים", pos: "noun" },
+      "run": { hebrew: "טווח, ריצה", pos: "noun" },
+      "s": { hebrew: "של (שייכות)", pos: "part" },
+      "sacrificed": { hebrew: "הקריבו (בעבר)", pos: "verb" },
+      "safety": { hebrew: "בטיחות", pos: "n" },
+      "sake": { hebrew: "תועלת, למען", pos: "noun" },
+      "sanctions": { hebrew: "סנקציות / עיצומים", pos: "n" },
+      "saturday": { hebrew: "שבת", pos: "noun" },
+      "saw": { hebrew: "ראה / ראתה (עבר)", pos: "v" },
+      "school": { hebrew: "בית ספר", pos: "noun" },
+      "scientific": { hebrew: "מדעי", pos: "adj" },
+      "scientists": { hebrew: "מדענים", pos: "n" },
+      "sector": { hebrew: "מגזר / סקטור", pos: "n" },
+      "secure": { hebrew: "מאובטח, בטוח", pos: "adj" },
+      "see": { hebrew: "לראות", pos: "verb" },
+      "settle": { hebrew: "להסדיר, להתיישב", pos: "verb" },
+      "severe": { hebrew: "חמור", pos: "adj" },
+      "she": { hebrew: "היא", pos: "pron" },
+      "shifts": { hebrew: "משמרות / תזוזות", pos: "n" },
+      "shoes": { hebrew: "נעליים", pos: "n" },
+      "short": { hebrew: "קצר / נמוך", pos: "adj" },
+      "shortly": { hebrew: "בקרוב / תוך זמן קצר", pos: "adv" },
+      "shortterm": { hebrew: "קצר טווח", pos: "adj" },
+      "signed": { hebrew: "חתם / נחתם", pos: "v" },
+      "singing": { hebrew: "שר / שירה", pos: "v" },
+      "sister": { hebrew: "אחות", pos: "n" },
+      "sleep": { hebrew: "לישון", pos: "verb" },
+      "sleeping": { hebrew: "ישן", pos: "verb" },
+      "small": { hebrew: "קטן", pos: "adj" },
+      "soccer": { hebrew: "כדורגל", pos: "noun" },
+      "society": { hebrew: "חברה (אנושית)", pos: "n" },
+      "socioeconomic": { hebrew: "סוציו-אקונומי / חברתי-כלכלי", pos: "adj" },
+      "soon": { hebrew: "בקרוב", pos: "adv" },
+      "sound": { hebrew: "קול / צליל / נשמע", pos: "n" },
+      "soup": { hebrew: "מרק", pos: "n" },
+      "spaces": { hebrew: "חללים / רווחים", pos: "n" },
+      "speak": { hebrew: "מדברים", pos: "verb" },
+      "specific": { hebrew: "ספציפי / מסוים", pos: "adj" },
+      "stability": { hebrew: "יציבות", pos: "noun" },
+      "staff": { hebrew: "צוות עובדים", pos: "n" },
+      "stage": { hebrew: "שלב / במה", pos: "n" },
+      "standards": { hebrew: "תקנים, סטנדרטים", pos: "noun" },
+      "standing": { hebrew: "עומד (בהווה)", pos: "v" },
+      "stands": { hebrew: "עומד, ניצב", pos: "verb" },
+      "start": { hebrew: "להתחיל / התחלה", pos: "v" },
+      "station": { hebrew: "תחנה", pos: "n" },
+      "status": { hebrew: "מעמד, סטטוס", pos: "noun" },
+      "step": { hebrew: "צעד", pos: "noun" },
+      "storybook": { hebrew: "ספר סיפורים", pos: "n" },
+      "strict": { hebrew: "קפדני / מחמיר", pos: "adj" },
+      "strike": { hebrew: "שביתה / להכות", pos: "n" },
+      "student": { hebrew: "תלמיד / סטודנט", pos: "n" },
+      "study": { hebrew: "ללמוד / לימוד", pos: "v" },
+      "studying": { hebrew: "לומד (בהווה)", pos: "v" },
+      "submitted": { hebrew: "הגישה (בעבר)", pos: "verb" },
+      "substantial": { hebrew: "ניכר, משמעותי", pos: "adj" },
+      "succeeded": { hebrew: "הצליח (בעבר)", pos: "verb" },
+      "such": { hebrew: "כזה / כגון", pos: "adj" },
+      "sufficient": { hebrew: "מספיק, הולם", pos: "adj" },
+      "summer": { hebrew: "קיץ", pos: "noun" },
+      "summit": { hebrew: "פסגה / ועידת פסגה", pos: "n" },
+      "sun": { hebrew: "שמש", pos: "n" },
+      "sunday": { hebrew: "יום ראשון", pos: "noun" },
+      "survey": { hebrew: "סקר", pos: "n" },
+      "sustainable": { hebrew: "בר-קיימא", pos: "adj" },
+      "system": { hebrew: "מערכת", pos: "n" },
+      "table": { hebrew: "שולחן", pos: "n" },
+      "talent": { hebrew: "כישרון", pos: "noun" },
+      "task": { hebrew: "משימה, מטלה", pos: "noun" },
+      "teacher": { hebrew: "מורה", pos: "n" },
+      "team": { hebrew: "צוות", pos: "noun" },
+      "technological": { hebrew: "טכנולוגי", pos: "adj" },
+      "telephone": { hebrew: "טלפון", pos: "n" },
+      "television": { hebrew: "טלוויזיה", pos: "n" },
+      "term": { hebrew: "מונח / תקופת כהונה", pos: "n" },
+      "test": { hebrew: "מבחן / לבדוק", pos: "n" },
+      "than": { hebrew: "מאשר", pos: "conj" },
+      "that": { hebrew: "ההוא, ההיא, ש-", pos: "det" },
+      "the": { hebrew: "ה- (ה' הידיעה)", pos: "art" },
+      "their": { hebrew: "שלהם / שלהן", pos: "pron" },
+      "theories": { hebrew: "תיאוריות", pos: "n" },
+      "there": { hebrew: "שם, יש", pos: "adv" },
+      "these": { hebrew: "אלה / אלו", pos: "pron" },
+      "they": { hebrew: "הם, הן", pos: "pron" },
+      "thinks": { hebrew: "חושב / חושבת", pos: "v" },
+      "this": { hebrew: "הזה, הזאת", pos: "det" },
+      "time": { hebrew: "זמן, שעה", pos: "noun" },
+      "to": { hebrew: "אל, ל-", pos: "prep" },
+      "today": { hebrew: "היום", pos: "adv" },
+      "tom": { hebrew: "תום (שם)", pos: "propn" },
+      "tomorrow": { hebrew: "מחר", pos: "adv" },
+      "tonight": { hebrew: "הלילה", pos: "adv" },
+      "too": { hebrew: "מדי / גם", pos: "adv" },
+      "top": { hebrew: "מוביל, עליון", pos: "adj" },
+      "transformation": { hebrew: "טרנספורמציה / שינוי צורה", pos: "n" },
+      "travel": { hebrew: "לטייל, לנסוע", pos: "verb" },
+      "tree": { hebrew: "עץ", pos: "n" },
+      "trip": { hebrew: "טיול / נסיעה", pos: "n" },
+      "truth": { hebrew: "אמת", pos: "n" },
+      "tv": { hebrew: "טלוויזיה", pos: "n" },
+      "two": { hebrew: "שתיים / שניים", pos: "num" },
+      "unanimous": { hebrew: "פה אחד / מוסכם על כולם", pos: "adj" },
+      "under": { hebrew: "מתחת ל-", pos: "prep" },
+      "unique": { hebrew: "ייחודי", pos: "adj" },
+      "universal": { hebrew: "עולמי, אוניברסלי", pos: "adj" },
+      "university": { hebrew: "אוניברסיטה", pos: "n" },
+      "unnecessary": { hebrew: "מיותר / לא נחוץ", pos: "adj" },
+      "until": { hebrew: "עד / עד ש-", pos: "prep" },
+      "usually": { hebrew: "בדרך כלל", pos: "adv" },
+      "vacation": { hebrew: "חופשה", pos: "n" },
+      "verify": { hebrew: "לאמת / לוודא", pos: "v" },
+      "very": { hebrew: "מאוד", pos: "adv" },
+      "violate": { hebrew: "להפר, להפר חוק", pos: "verb" },
+      "visible": { hebrew: "נראה לעין, גלוי", pos: "adj" },
+      "visit": { hebrew: "לבקר", pos: "verb" },
+      "vote": { hebrew: "להצביע / הצבעה", pos: "v" },
+      "voted": { hebrew: "הצביע / הצביעו (עבר)", pos: "v" },
+      "waited": { hebrew: "חיכה / המתין", pos: "v" },
+      "want": { hebrew: "רוצה", pos: "verb" },
+      "warehouse": { hebrew: "מחסן", pos: "noun" },
+      "was": { hebrew: "היה, הייתה (עבר)", pos: "verb" },
+      "watch": { hebrew: "לצפות / שעון", pos: "v" },
+      "watching": { hebrew: "צופה (בהווה)", pos: "v" },
+      "we": { hebrew: "אנחנו", pos: "pron" },
+      "weather": { hebrew: "מזג אוויר", pos: "n" },
+      "week": { hebrew: "שבוע", pos: "noun" },
+      "welfare": { hebrew: "רווחה", pos: "noun" },
+      "well": { hebrew: "היטב, בהרבה", pos: "adv" },
+      "went": { hebrew: "הלך (בעבר)", pos: "verb" },
+      "were": { hebrew: "היו (עבר)", pos: "verb" },
+      "what": { hebrew: "מה", pos: "pron" },
+      "when": { hebrew: "מתי, כאשר", pos: "adv" },
+      "where": { hebrew: "איפה, לאן", pos: "adv" },
+      "whereas": { hebrew: "אף על פי ש-, בעוד ש-", pos: "conj" },
+      "who": { hebrew: "מי / אשר", pos: "pron" },
+      "why": { hebrew: "מדוע, למה", pos: "adv" },
+      "will": { hebrew: "פועל עזר לעתיד", pos: "modal" },
+      "with": { hebrew: "עם, באמצעות", pos: "prep" },
+      "without": { hebrew: "ללא, בלי", pos: "prep" },
+      "wooden": { hebrew: "מעץ", pos: "adj" },
+      "words": { hebrew: "מילים", pos: "noun" },
+      "work": { hebrew: "עבודה; לעבוד", pos: "noun/verb" },
+      "writing": { hebrew: "כותב (בהווה) / כתיבה", pos: "v" },
+      "year": { hebrew: "שנה", pos: "noun" },
+      "yellow": { hebrew: "צהוב", pos: "adj" },
+      "yesterday": { hebrew: "אתמול", pos: "adv" },
+      "yields": { hebrew: "מניב / תוצרים", pos: "v" },
+      "you": { hebrew: "אתה, את, אתם", pos: "pron" },
+      "your": { hebrew: "שלך / שלכם", pos: "pron" },
+      "zoo": { hebrew: "גן חיות", pos: "noun" },
+    };
+
+    /* ============================================================================
+       A1 BEGINNER QUESTION BANK (EVERYDAY CONTEXTS & SIMPLE VOCABULARY)
+       ============================================================================ */
+    // ============================================================================
+// LEVEL 1: A1 BEGINNER QUESTION BANK (70 QUESTIONS WITH HEBREW EXPLANATIONS)
+// ============================================================================
+const A1_QUESTION_BANK = [
+  // ---------------- PAST SIMPLE (A1) ----------------
+  {
+    category: "past_simple",
+    sentence: "Yesterday, Dan [ ___ ] to the park.",
+    target: "went",
+    options: ["went", "goes", "go", "going"],
+    explanationHebrew: "נשתמש ב-went (צורת העבר של go) מכיוון שהמילה yesterday מעידה על פעולה שהסתיימה בעבר."
+  },
+  {
+    category: "past_simple",
+    sentence: "They [ ___ ] dinner at a restaurant two days ago.",
+    target: "ate",
+    options: ["ate", "eat", "eats", "eating"],
+    explanationHebrew: "נשתמש ב-ate (עבר של eat) כי הפעולה התרחשה לפני יומיים (two days ago)."
+  },
+  {
+    category: "past_simple",
+    sentence: "She [ ___ ] not watch TV last night.",
+    target: "did",
+    options: ["did", "does", "do", "is"],
+    explanationHebrew: "בשלילה בעבר פשוט משתמשים בפועל העזר did יחד עם not ופועל בצורת המקור (did not watch)."
+  },
+  {
+    category: "past_simple",
+    sentence: "We [ ___ ] not hear the telephone ring.",
+    target: "did",
+    options: ["did", "do", "does", "were"],
+    explanationHebrew: "נשתמש ב-did כי זהו פועל העזר לשלילה בעבר עבור כל הגופים."
+  },
+  {
+    category: "past_simple",
+    sentence: "[ ___ ] you see the teacher this morning?",
+    target: "Did",
+    options: ["Did", "Do", "Are", "Were"],
+    explanationHebrew: "שאלת כן/לא בעבר פשוט נפתחת תמיד בפועל העזר Did."
+  },
+  {
+    category: "past_simple",
+    sentence: "[ ___ ] he play football last Friday?",
+    target: "Did",
+    options: ["Did", "Does", "Is", "Has"],
+    explanationHebrew: "שאלת עבר פשוט על יום שישי שעבר נפתחת ב-Did."
+  },
+  {
+    category: "past_simple",
+    sentence: "Where [ ___ ] they buy that lovely cake yesterday?",
+    target: "did",
+    options: ["did", "do", "does", "are"],
+    explanationHebrew: "בשאלת Wh בעבר, פועל העזר שמופיע מיד אחרי מילת השאלה הוא did."
+  },
+  {
+    category: "past_simple",
+    sentence: "What time [ ___ ] you go to sleep yesterday?",
+    target: "did",
+    options: ["did", "do", "were", "are"],
+    explanationHebrew: "השאלה מתייחסת לזמן השינה אתמול, לכן יש להשתמש ב-did."
+  },
+  {
+    category: "past_simple",
+    sentence: "I [ ___ ] my keys on the table an hour ago.",
+    target: "left",
+    options: ["left", "leave", "leaves", "leaving"],
+    explanationHebrew: "נשתמש ב-left (צורת העבר של leave) עקב הביטוי an hour ago (לפני שעה)."
+  },
+  {
+    category: "past_simple",
+    sentence: "Tom [ ___ ] a new bicycle last week.",
+    target: "bought",
+    options: ["bought", "buys", "buy", "buying"],
+    explanationHebrew: "קניית האופניים התרחשה בשבוע שעבר (last week), לכן נשתמש בפועל בעבר bought."
+  },
+
+  // ---------------- PRESENT SIMPLE (A1) ----------------
+  {
+    category: "present_simple",
+    sentence: "The cat [ ___ ] fresh milk every morning.",
+    target: "drinks",
+    options: ["drinks", "drink", "drinking", "drank"],
+    explanationHebrew: "עבור גוף שלישי יחיד (The cat = it) בהווה פשוט מוסיפים s לפועל: drinks."
+  },
+  {
+    category: "present_simple",
+    sentence: "My sister [ ___ ] English every evening.",
+    target: "studies",
+    options: ["studies", "study", "studying", "studied"],
+    explanationHebrew: "עבור גוף שלישי יחיד (My sister = she) הפועל study מקבל סיומת ies בהווה פשוט."
+  },
+  {
+    category: "present_simple",
+    sentence: "My brother [ ___ ] not like green apples.",
+    target: "does",
+    options: ["does", "do", "is", "did"],
+    explanationHebrew: "לשלילה בהווה פשוט עם גוף יחיד (he/she/it) משתמשים ב-does not."
+  },
+  {
+    category: "present_simple",
+    sentence: "They [ ___ ] not live in a big city.",
+    target: "do",
+    options: ["do", "does", "are", "did"],
+    explanationHebrew: "לשלילה עם כינוי הגוף They בהווה פשוט משתמשים ב-do not."
+  },
+  {
+    category: "present_simple",
+    sentence: "[ ___ ] they play soccer on Sunday afternoon?",
+    target: "Do",
+    options: ["Do", "Does", "Is", "Are"],
+    explanationHebrew: "שאלת כן/לא בהווה פשוט עם גוף They נפתחת ב-Do."
+  },
+  {
+    category: "present_simple",
+    sentence: "[ ___ ] your father drive to work every day?",
+    target: "Does",
+    options: ["Does", "Do", "Is", "Are"],
+    explanationHebrew: "אביך הוא גוף שלישי יחיד (he), ולכן שאלת ההווה נפתחת ב-Does."
+  },
+  {
+    category: "present_simple",
+    sentence: "Where [ ___ ] you usually buy your bread?",
+    target: "do",
+    options: ["do", "does", "are", "did"],
+    explanationHebrew: "בשאלת Wh עם גוף you בהווה פשוט, פועל העזר הוא do."
+  },
+  {
+    category: "present_simple",
+    sentence: "Why [ ___ ] the dog bark at night?",
+    target: "does",
+    options: ["does", "do", "is", "are"],
+    explanationHebrew: "הכלב (The dog = it) הוא יחיד, לכן פועל העזר בשאלה הוא does."
+  },
+  {
+    category: "present_simple",
+    sentence: "We always [ ___ ] our hands before eating.",
+    target: "wash",
+    options: ["wash", "washes", "washing", "washed"],
+    explanationHebrew: "עם הגוף We בהווה פשוט הפועל נשאר בצורת הבסיס: wash."
+  },
+  {
+    category: "present_simple",
+    sentence: "The sun [ ___ ] in the east.",
+    target: "rises",
+    options: ["rises", "rise", "rising", "rose"],
+    explanationHebrew: "עובדת טבע קבועה בהווה פשוט ביחיד (The sun = it) דורשת תוספת s: rises."
+  },
+
+  // ---------------- FUTURE SIMPLE (A1) ----------------
+  {
+    category: "future_simple",
+    sentence: "Tomorrow, my family [ ___ ] visit grandma.",
+    target: "will",
+    options: ["will", "is", "did", "do"],
+    explanationHebrew: "לביטוי עתיד פשוט בעברית ('נבקר / תבקר') משתמשים במילת העזר will לפני הפועל."
+  },
+  {
+    category: "future_simple",
+    sentence: "I promise I [ ___ ] help you with the homework.",
+    target: "will",
+    options: ["will", "do", "am", "did"],
+    explanationHebrew: "להבטחות ופעולות עתידיות נשתמש ב-will בצמוד לפועל הבסיס (will help)."
+  },
+  {
+    category: "future_simple",
+    sentence: "We [ ___ ] not go to school on Saturday.",
+    target: "will",
+    options: ["will", "do", "are", "did"],
+    explanationHebrew: "שלילה בעתיד נוצרת על ידי will not (או won't)."
+  },
+  {
+    category: "future_simple",
+    sentence: "She [ ___ ] not forget your birthday next month.",
+    target: "will",
+    options: ["will", "does", "is", "has"],
+    explanationHebrew: "נשתמש ב-will not לציון פעולה שלא תתרחש בעתיד (next month)."
+  },
+  {
+    category: "future_simple",
+    sentence: "[ ___ ] you call me tonight after dinner?",
+    target: "Will",
+    options: ["Will", "Do", "Are", "Did"],
+    explanationHebrew: "שאלת כן/לא בעתיד נפתחת במילת העזר Will."
+  },
+  {
+    category: "future_simple",
+    sentence: "[ ___ ] it rain tomorrow morning?",
+    target: "Will",
+    options: ["Will", "Does", "Is", "Has"],
+    explanationHebrew: "חיזוי עתידי (rain tomorrow) נשאל באמצעות פועל העזר Will."
+  },
+  {
+    category: "future_simple",
+    sentence: "Where [ ___ ] they travel next summer vacation?",
+    target: "will",
+    options: ["will", "do", "did", "are"],
+    explanationHebrew: "בשאלת עתיד עם מילת שאלה (Where), מילת העזר מיד אחריה היא will."
+  },
+  {
+    category: "future_simple",
+    sentence: "When [ ___ ] the movie start this evening?",
+    target: "will",
+    options: ["will", "does", "is", "did"],
+    explanationHebrew: "שאלה על התרחשות עתידית הערב משתמשת ב-will."
+  },
+  {
+    category: "future_simple",
+    sentence: "They [ ___ ] arrive at the station soon.",
+    target: "will",
+    options: ["will", "are", "have", "do"],
+    explanationHebrew: "המילה soon (בקרוב) מעידה על עתיד, ולכן נבחר ב-will arrive."
+  },
+  {
+    category: "future_simple",
+    sentence: "The doctor thinks he [ ___ ] recover very fast.",
+    target: "will",
+    options: ["will", "does", "is", "did"],
+    explanationHebrew: "תחזית לגבי החלמה עתידית מנוסחת עם will recover."
+  },
+
+  // ---------------- PRESENT PROGRESSIVE (A1) ----------------
+  {
+    category: "present_progressive",
+    sentence: "Look! The baby [ ___ ] sleeping right now.",
+    target: "is",
+    options: ["is", "are", "am", "be"],
+    explanationHebrew: "עבור גוף יחיד (The baby = it/he/she) בהווה ממושך (right now) נשתמש ב-is + פועל עם ing."
+  },
+  {
+    category: "present_progressive",
+    sentence: "She [ ___ ] writing an email at the moment.",
+    target: "is",
+    options: ["is", "are", "am", "be"],
+    explanationHebrew: "לגוף She בהווה ממושך (at the moment) פועל העזר המתאים הוא is."
+  },
+  {
+    category: "present_progressive",
+    sentence: "The boys [ ___ ] playing computer games now.",
+    target: "are",
+    options: ["are", "is", "am", "do"],
+    explanationHebrew: "הבנים ברבים (The boys = they), ולכן בהווה ממושך נשתמש ב-are + פועל עם ing."
+  },
+  {
+    category: "present_progressive",
+    sentence: "Listen! The birds [ ___ ] singing outside.",
+    target: "are",
+    options: ["are", "is", "am", "be"],
+    explanationHebrew: "הציפורים ברבים (birds), ולכן פועל העזר בהווה ממושך הוא are."
+  },
+  {
+    category: "present_progressive",
+    sentence: "I [ ___ ] studying for my test right now.",
+    target: "am",
+    options: ["am", "is", "are", "be"],
+    explanationHebrew: "עם כינוי הגוף I בהווה ממושך משתמשים אך ורק ב-am."
+  },
+  {
+    category: "present_progressive",
+    sentence: "We [ ___ ] not watching television right now.",
+    target: "are",
+    options: ["are", "is", "am", "do"],
+    explanationHebrew: "לשלילה בהווה ממושך עם We נשתמש ב-are not."
+  },
+  {
+    category: "present_progressive",
+    sentence: "[ ___ ] you reading this storybook now?",
+    target: "Are",
+    options: ["Are", "Is", "Do", "Did"],
+    explanationHebrew: "שאלת הווה ממושך עם you נפתחת ב-Are + פועל עם ing."
+  },
+  {
+    category: "present_progressive",
+    sentence: "[ ___ ] she cooking dinner in the kitchen?",
+    target: "Is",
+    options: ["Is", "Are", "Does", "Do"],
+    explanationHebrew: "שאלת הווה ממושך עם גוף יחיד she נפתחת ב-Is."
+  },
+  {
+    category: "present_progressive",
+    sentence: "Why [ ___ ] the dog barking at the door?",
+    target: "is",
+    options: ["is", "are", "does", "do"],
+    explanationHebrew: "בשאלת הווה ממושך על יחיד (The dog), פועל העזר אחרי מילת השאלה הוא is."
+  },
+  {
+    category: "present_progressive",
+    sentence: "What [ ___ ] they doing in the garden?",
+    target: "are",
+    options: ["are", "is", "do", "did"],
+    explanationHebrew: "בשאלת הווה ממושך עם they, פועל העזר הוא are."
+  },
+
+  // ---------------- ARTICLES ("A" vs "AN") (A1) ----------------
+  {
+    category: "articles",
+    sentence: "I want to eat [ ___ ] red apple.",
+    target: "a",
+    options: ["a", "an"],
+    explanationHebrew: "המילה red מתחילה בעיצור (צליל ר'), ולכן נשתמש בתווית a."
+  },
+  {
+    category: "articles",
+    sentence: "He has [ ___ ] orange bag for school.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה orange מתחילה בצליל תנועה (O), ולכן נשתמש בתווית an."
+  },
+  {
+    category: "articles",
+    sentence: "There is [ ___ ] big elephant in the zoo.",
+    target: "a",
+    options: ["a", "an"],
+    explanationHebrew: "התווית מתייחסת למילה big שמתחילה בעיצור (ב'), לכן נשתמש ב-a."
+  },
+  {
+    category: "articles",
+    sentence: "Can I have [ ___ ] egg for breakfast?",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה egg מתחילה בצליל תנועה (E), ולכן יש להשתמש ב-an."
+  },
+  {
+    category: "articles",
+    sentence: "She lives in [ ___ ] old house near the park.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה old מתחילה בצליל תנועה, ולכן נשתמש ב-an."
+  },
+  {
+    category: "articles",
+    sentence: "He is [ ___ ] good student in my class.",
+    target: "a",
+    options: ["a", "an"],
+    explanationHebrew: "המילה good מתחילה בעיצור (צליל ג'), ולכן נשתמש ב-a."
+  },
+  {
+    category: "articles",
+    sentence: "I saw [ ___ ] interesting bird on the tree.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה interesting מתחילה בצליל תנועה (I), לכן חובה להשתמש ב-an."
+  },
+  {
+    category: "articles",
+    sentence: "She drives [ ___ ] small blue car.",
+    target: "a",
+    options: ["a", "an"],
+    explanationHebrew: "המילה small מתחילה בעיצור (ס'), ולכן נשתמש ב-a."
+  },
+  {
+    category: "articles",
+    sentence: "We waited for [ ___ ] hour at the station.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "האות H במילה hour שקטה והמילה נשמעת כמו our (תנועה), לכן נשתמש ב-an."
+  },
+  {
+    category: "articles",
+    sentence: "This is [ ___ ] easy question to answer.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה easy מתחילה בצליל תנועה (אי), לכן נבחר ב-an."
+  },
+
+  // ---------------- STATE & LOCATION (A1) ----------------
+  {
+    category: "state_location",
+    sentence: "The yellow chicken [ ___ ] very happy today.",
+    target: "is",
+    options: ["is", "are", "am", "be"],
+    explanationHebrew: "משפט תיאור מצב ביחיד (The chicken = it): נשתמש בפועל to be בצורת is."
+  },
+  {
+    category: "state_location",
+    sentence: "My books [ ___ ] on the wooden desk.",
+    target: "are",
+    options: ["are", "is", "am", "was"],
+    explanationHebrew: "הספרים הם ברבים (books = they), ולכן לתיאור מיקומם נשתמש ב-are."
+  },
+  {
+    category: "state_location",
+    sentence: "I [ ___ ] ready to learn English.",
+    target: "am",
+    options: ["am", "is", "are", "be"],
+    explanationHebrew: "לתיאור תכונה/מצב של הגוף הראשון יחיד (I) נשתמש ב-am."
+  },
+  {
+    category: "state_location",
+    sentence: "The kids [ ___ ] at school today.",
+    target: "are",
+    options: ["are", "is", "am", "do"],
+    explanationHebrew: "הילדים ברבים (The kids), לכן תיאור מיקומם דורש are."
+  },
+  {
+    category: "state_location",
+    sentence: "This soup [ ___ ] too hot to drink.",
+    target: "is",
+    options: ["is", "are", "am", "be"],
+    explanationHebrew: "המרק הוא שם עצם יחיד שאינו ספיר (it), ולכן תיאור המצב הוא is."
+  },
+  {
+    category: "state_location",
+    sentence: "We [ ___ ] excited about the school trip.",
+    target: "are",
+    options: ["are", "is", "am", "be"],
+    explanationHebrew: "הגוף We (אנחנו) דורש את פועל ה-to be בצורת are."
+  },
+  {
+    category: "state_location",
+    sentence: "The hospital [ ___ ] near the central market.",
+    target: "is",
+    options: ["is", "are", "am", "be"],
+    explanationHebrew: "בית החולים הוא מבנה יחיד, ולכן לתיאור מיקומו נשתמש ב-is."
+  },
+  {
+    category: "state_location",
+    sentence: "His shoes [ ___ ] clean and new.",
+    target: "are",
+    options: ["are", "is", "am", "was"],
+    explanationHebrew: "נעליים (shoes) מופיעות בצורת רבים, לכן נשתמש ב-are."
+  },
+  {
+    category: "state_location",
+    sentence: "My grandparents [ ___ ] at home now.",
+    target: "are",
+    options: ["are", "is", "am", "be"],
+    explanationHebrew: "סבא וסבתא (grandparents) הם רבים, ולכן לתיאור מיקומם נשתמש ב-are."
+  },
+  {
+    category: "state_location",
+    sentence: "The weather [ ___ ] very cold this evening.",
+    target: "is",
+    options: ["is", "are", "am", "be"],
+    explanationHebrew: "מזג האוויר (The weather) הוא שם עצם יחיד, לכן תיאורו נעשה עם is."
+  },
+
+  // ---------------- PREPOSITIONS & IDIOMS (A1) ----------------
+  {
+    category: "prepositions_proverbs",
+    sentence: "This gift is [ ___ ] you. Happy birthday!",
+    target: "for",
+    options: ["for", "at", "by", "in"],
+    explanationHebrew: "נשתמש ב-for (בשביל/עבור) כי המתנה מיועדת 'בשביל' מקבל המתנה."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "I bought these flowers [ ___ ] my mother.",
+    target: "for",
+    options: ["for", "by", "at", "on"],
+    explanationHebrew: "נשתמש ב-for ('בשביל') כדי לציין עבור מי נקנו הפרחים."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "The cat is hiding [ ___ ] the door.",
+    target: "behind",
+    options: ["behind", "for", "at", "on"],
+    explanationHebrew: "נשתמש ב-behind (מאחורי) לתיאור מיקום פיזי של מחבוא מאחורי הדלת."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "Who is standing [ ___ ] the tree?",
+    target: "behind",
+    options: ["behind", "for", "by", "at"],
+    explanationHebrew: "נשתמש ב-behind לציון עמידה מאחורי העץ."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "We arrive [ ___ ] school at eight o'clock.",
+    target: "at",
+    options: ["at", "on", "for", "by"],
+    explanationHebrew: "לציון הגעה לנקודה/מוסד מוגדר כמו בית ספר או שעה מדויקת, מילת היחס היא at."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "The family is having lunch [ ___ ] home.",
+    target: "at",
+    options: ["at", "in", "by", "for"],
+    explanationHebrew: "בביטוי הקבוע 'בבית' באנגלית משתמשים במילת היחס at (at home)."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "Dan goes to work [ ___ ] bus every day.",
+    target: "by",
+    options: ["by", "in", "at", "for"],
+    explanationHebrew: "לציון אמצעי תחבורה (באוטובוס, ברכבת, ברכב) משתמשים במילת היחס by (by bus)."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "They like to travel to Eilat [ ___ ] car.",
+    target: "by",
+    options: ["by", "at", "for", "in"],
+    explanationHebrew: "אמצעי תחבורה מוצמד למילת היחס by (by car)."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "Step [ ___ ] step, you learn English.",
+    target: "by",
+    options: ["by", "in", "at", "for"],
+    explanationHebrew: "בביטוי השגור 'צעד אחר צעד' באנגלית משתמשים ב-step by step."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "The keys are inside the box [ ___ ] the kitchen.",
+    target: "in",
+    options: ["in", "at", "on", "by"],
+    explanationHebrew: "לציון הימצאות בתוך חדר סגור כמו מטבח, נשתמש במילת היחס in (in the kitchen)."
+  }
+];
+
+// ============================================================================
+// LEVEL 2: BAND III (GRADE 12) QUESTION BANK (70 QUESTIONS WITH EXPLANATIONS)
+// ============================================================================
+const BAND3_QUESTION_BANK = [
+  // ---------------- PAST SIMPLE (BAND III) ----------------
+  {
+    category: "past_simple",
+    sentence: "Last week, the executive [ ___ ] an official conclusion.",
+    target: "concluded",
+    options: ["concluded", "concludes", "conclude", "concluding"],
+    explanationHebrew: "הביטוי Last week מעיד על עבר פשוט, לכן נשתמש בפועל concluded (הסיק/סיכם)."
+  },
+  {
+    category: "past_simple",
+    sentence: "The judge [ ___ ] that the evidence was insufficient.",
+    target: "concluded",
+    options: ["concluded", "conclude", "concludes", "concluding"],
+    explanationHebrew: "פעולת הסקת המסקנה של השופט התרחשה בעבר, ולכן נשתמש ב-concluded."
+  },
+  {
+    category: "past_simple",
+    sentence: "The firm [ ___ ] sufficient profits last quarter.",
+    target: "did not generate",
+    options: ["did not generate", "does not generate", "not generated", "was not generate"],
+    explanationHebrew: "שלילה בעבר פשוט (last quarter) מורכבת מ-did not ופועל בסיס: did not generate (לא ייצרה)."
+  },
+  {
+    category: "past_simple",
+    sentence: "The committee [ ___ ] the proposal during yesterday's debate.",
+    target: "did not approve",
+    options: ["did not approve", "does not approve", "not approved", "was not approve"],
+    explanationHebrew: "עבור שלילה בעבר עם yesterday משתמשים ב-did not + פועל מקור."
+  },
+  {
+    category: "past_simple",
+    sentence: "[ ___ ] the commander confirm the deployment yesterday?",
+    target: "Did",
+    options: ["Did", "Does", "Was", "Had"],
+    explanationHebrew: "שאלת עבר פשוט (yesterday) נפתחת בפועל העזר Did ולאחריו פועל במקור (confirm)."
+  },
+  {
+    category: "past_simple",
+    sentence: "[ ___ ] the administration settle the dispute last month?",
+    target: "Did",
+    options: ["Did", "Do", "Has", "Was"],
+    explanationHebrew: "השאלה מתייחסת להסדרת הסכסוך בחודש שעבר, ולכן פועל העזר המתאים הוא Did."
+  },
+  {
+    category: "past_simple",
+    sentence: "Why [ ___ ] the board oppose the corporate restructuring?",
+    target: "did",
+    options: ["did", "do", "was", "were"],
+    explanationHebrew: "שאלת Wh בעבר פשוט דורשת את פועל העזר did מיד אחרי מילת השאלה."
+  },
+  {
+    category: "past_simple",
+    sentence: "How [ ___ ] the researcher eliminate the environmental risk?",
+    target: "did",
+    options: ["did", "does", "is", "were"],
+    explanationHebrew: "שאלת בירור על פעולת ביטול/סילוק בעבר דורשת did."
+  },
+  {
+    category: "past_simple",
+    sentence: "The government [ ___ ] severe sanctions against the aggressor.",
+    target: "imposed",
+    options: ["imposed", "imposes", "impose", "imposing"],
+    explanationHebrew: "הטלת הסנקציות היא פעולה היסטורית שהושלמה בעבר, לכן נשתמש ב-imposed."
+  },
+  {
+    category: "past_simple",
+    sentence: "The organization [ ___ ] all its assets from the bank.",
+    target: "withdrew",
+    options: ["withdrew", "withdraws", "withdraw", "withdrawing"],
+    explanationHebrew: "נשתמש ב-withdrew (צורת העבר האי-רגולרית של withdraw - משך/נסוג)."
+  },
+
+  // ---------------- PRESENT SIMPLE (BAND III) ----------------
+  {
+    category: "present_simple",
+    sentence: "Every year, our department [ ___ ] new resources to the district.",
+    target: "distributes",
+    options: ["distributes", "distribute", "is distributing", "distributed"],
+    explanationHebrew: "עבור גוף יחיד (department = it) והרגל שחוזר כל שנה (Every year), מוסיפים s לפועל: distributes."
+  },
+  {
+    category: "present_simple",
+    sentence: "The agency [ ___ ] financial data to verify compliance.",
+    target: "distributes",
+    options: ["distributes", "distribute", "distributing", "distributed"],
+    explanationHebrew: "הסוכנות היא גוף שלישי יחיד (it), ולכן בהווה פשוט הפועל מקבל s."
+  },
+  {
+    category: "present_simple",
+    sentence: "A reliable colleague [ ___ ] ethical guidelines.",
+    target: "does not violate",
+    options: ["does not violate", "do not violate", "not violates", "is not violate"],
+    explanationHebrew: "עמית מהימן הוא יחיד (he/she), ולכן שלילה בהווה פשוט מנוסחת ב-does not violate."
+  },
+  {
+    category: "present_simple",
+    sentence: "The current system [ ___ ] unnecessary expenditures.",
+    target: "does not eliminate",
+    options: ["does not eliminate", "do not eliminate", "not eliminates", "is not eliminate"],
+    explanationHebrew: "המערכת הנוכחית היא גוף יחיד, ושלילה של פעולה קבועה מתבצעת עם does not."
+  },
+  {
+    category: "present_simple",
+    sentence: "[ ___ ] this device meet all conventional safety standards?",
+    target: "Does",
+    options: ["Does", "Do", "Is", "Are"],
+    explanationHebrew: "מכשיר (this device) הוא יחיד, ושאלת הווה פשוט אודותיו נפתחת ב-Does."
+  },
+  {
+    category: "present_simple",
+    sentence: "[ ___ ] the executive acknowledge the substantial findings?",
+    target: "Does",
+    options: ["Does", "Do", "Is", "Are"],
+    explanationHebrew: "המנהל (the executive) הוא יחיד, לכן שאלת הווה פשוט נפתחת ב-Does."
+  },
+  {
+    category: "present_simple",
+    sentence: "How [ ___ ] an engineer define the exact proportions?",
+    target: "does",
+    options: ["does", "do", "is", "are"],
+    explanationHebrew: "מהנדס (an engineer) הוא יחיד, ולכן בשאלת Wh בהווה פועל העזר הוא does."
+  },
+  {
+    category: "present_simple",
+    sentence: "Why [ ___ ] the public sector maintain such strict hierarchy?",
+    target: "does",
+    options: ["does", "do", "is", "are"],
+    explanationHebrew: "המגזר הציבורי הוא שם עצם קיבוצי ביחיד, הדורש את פועל העזר does."
+  },
+  {
+    category: "present_simple",
+    sentence: "Sound economic theories [ ___ ] long-term investment.",
+    target: "facilitate",
+    options: ["facilitate", "facilitates", "facilitating", "facilitated"],
+    explanationHebrew: "תיאוריות (theories) הן נושא ברבים, ולכן בהווה פשוט הפועל מופיע בצורת בסיס ללא s: facilitate."
+  },
+  {
+    category: "present_simple",
+    sentence: "Modern institutions often [ ___ ] external consultants.",
+    target: "engage",
+    options: ["engage", "engages", "engaging", "engaged"],
+    explanationHebrew: "מוסדות (institutions) ברבים דורשים פועל בסיס ללא s בהווה פשוט: engage."
+  },
+
+  // ---------------- FUTURE SIMPLE (BAND III) ----------------
+  {
+    category: "future_simple",
+    sentence: "In the long run, this investment [ ___ ] our financial stability.",
+    target: "will reinforce",
+    options: ["will reinforce", "reinforces", "is reinforcing", "reinforced"],
+    explanationHebrew: "הביטוי In the long run (לטווח הרחוק) מתייחס לעתיד, ולכן נשתמש ב-will reinforce (יחזק)."
+  },
+  {
+    category: "future_simple",
+    sentence: "The new legislation [ ___ ] civic welfare considerably.",
+    target: "will reinforce",
+    options: ["will reinforce", "reinforcing", "reinforces", "reinforced"],
+    explanationHebrew: "חיזוי עתידי של השפעת החקיקה דורש will בצמוד לפועל הבסיס: will reinforce."
+  },
+  {
+    category: "future_simple",
+    sentence: "The director [ ___ ] the initial draft without substantial revision.",
+    target: "will not approve",
+    options: ["will not approve", "does not approve", "is not approve", "won't approved"],
+    explanationHebrew: "שלילה עתידית מנוסחת על ידי will not בתוספת פועל הבסיס: will not approve."
+  },
+  {
+    category: "future_simple",
+    sentence: "The institution [ ___ ] any applicant who fails the criteria.",
+    target: "will not admit",
+    options: ["will not admit", "does not admit", "is not admitting", "not admit"],
+    explanationHebrew: "קביעת מדיניות עתידית מנוסחת בשלילת העתיד: will not admit."
+  },
+  {
+    category: "future_simple",
+    sentence: "[ ___ ] the administration settle the accumulated debt tomorrow?",
+    target: "Will",
+    options: ["Will", "Do", "Are", "Did"],
+    explanationHebrew: "השאלה עוסקת בפעולה מחר (tomorrow), ולכן שאלת כן/לא בעתיד נפתחת ב-Will."
+  },
+  {
+    category: "future_simple",
+    sentence: "[ ___ ] the conference facilitate international cooperation?",
+    target: "Will",
+    options: ["Will", "Does", "Is", "Has"],
+    explanationHebrew: "שאלת עתיד אודות הועידה הבאה נפתחת בפועל העזר Will."
+  },
+  {
+    category: "future_simple",
+    sentence: "When [ ___ ] they implement the universal guidelines?",
+    target: "will",
+    options: ["will", "do", "did", "are"],
+    explanationHebrew: "שאלה על מועד יישום עתידי דורשת את פועל העזר will מיד לאחר מילת השאלה."
+  },
+  {
+    category: "future_simple",
+    sentence: "How [ ___ ] society cope with this rapid transformation?",
+    target: "will",
+    options: ["will", "does", "did", "is"],
+    explanationHebrew: "שאלת חיזוי עתידי לגבי התמודדות החברה נעשית באמצעות will."
+  },
+  {
+    category: "future_simple",
+    sentence: "Experts predict that climate shifts [ ___ ] crop yields.",
+    target: "will diminish",
+    options: ["will diminish", "diminishes", "diminished", "diminishing"],
+    explanationHebrew: "תחזיות של מומחים (predict) לגבי העתיד דורשות מבנה עתיד פשוט: will diminish."
+  },
+  {
+    category: "future_simple",
+    sentence: "The committee [ ___ ] an official announcement shortly.",
+    target: "will publish",
+    options: ["will publish", "publishes", "published", "is publishing"],
+    explanationHebrew: "המילה shortly (בקרוב) מעידה על עתיד, ולכן נשתמש ב-will publish."
+  },
+
+  // ---------------- PRESENT PROGRESSIVE (BAND III) ----------------
+  {
+    category: "present_progressive",
+    sentence: "Right now, the administration [ ___ ] new candidates for the task.",
+    target: "is recruiting",
+    options: ["is recruiting", "recruits", "are recruiting", "will recruit"],
+    explanationHebrew: "ההנהלה ביחיד (administration), והביטוי Right now דורש הווה ממושך: is recruiting."
+  },
+  {
+    category: "present_progressive",
+    sentence: "The university [ ___ ] leading scientists to conduct the study.",
+    target: "is recruiting",
+    options: ["is recruiting", "recruits", "are recruiting", "recruit"],
+    explanationHebrew: "האוניברסיטה (גוף יחיד) מגייסת ברגעים אלו חוקרים, ולכן נשתמש ב-is recruiting."
+  },
+  {
+    category: "present_progressive",
+    sentence: "We [ ___ ] the internal mechanism at the present moment.",
+    target: "are not altering",
+    options: ["are not altering", "is not altering", "do not alter", "not altering"],
+    explanationHebrew: "עם הגוף We בזמן הווה ממושך (at the present moment), שלילה נבנית כ-are not altering."
+  },
+  {
+    category: "present_progressive",
+    sentence: "The authorities [ ___ ] excessive regulations at this stage.",
+    target: "are not imposing",
+    options: ["are not imposing", "is not imposing", "do not impose", "not imposing"],
+    explanationHebrew: "הרשויות ברבים (authorities), לכן שלילה בהווה ממושך היא are not imposing."
+  },
+  {
+    category: "present_progressive",
+    sentence: "[ ___ ] the residents coping with the severe circumstances?",
+    target: "Are",
+    options: ["Are", "Is", "Do", "Have"],
+    explanationHebrew: "התושבים ברבים (residents), והפועל מסתיים ב-ing, לכן שאלת ההווה הממושך נפתחת ב-Are."
+  },
+  {
+    category: "present_progressive",
+    sentence: "[ ___ ] the committee evaluating the economic impact right now?",
+    target: "Is",
+    options: ["Is", "Are", "Does", "Will"],
+    explanationHebrew: "הוועדה כיחידה (committee = it) והפועל הוא evaluating, לכן השאלה נפתחת ב-Is."
+  },
+  {
+    category: "present_progressive",
+    sentence: "What [ ___ ] the lead researcher conducting in the laboratory currently?",
+    target: "is",
+    options: ["is", "are", "does", "will"],
+    explanationHebrew: "החוקר הראשי הוא יחיד, ולכן פועל העזר להווה ממושך עם conducting הוא is."
+  },
+  {
+    category: "present_progressive",
+    sentence: "Why [ ___ ] the delegates debating this specific clause today?",
+    target: "are",
+    options: ["are", "is", "do", "did"],
+    explanationHebrew: "הנציגים ברבים (delegates), ולכן פועל העזר להווה ממושך עם debating הוא are."
+  },
+  {
+    category: "present_progressive",
+    sentence: "The technological sector [ ___ ] rapidly this decade.",
+    target: "is evolving",
+    options: ["is evolving", "evolves", "are evolving", "evolved"],
+    explanationHebrew: "המגזר הטכנולוגי כיחיד שנמצא בתהליך התפתחות מתמשך דורש is evolving."
+  },
+  {
+    category: "present_progressive",
+    sentence: "Independent monitors [ ___ ] the vote counting as we speak.",
+    target: "are observing",
+    options: ["are observing", "is observing", "observes", "observed"],
+    explanationHebrew: "משקיפים ברבים (monitors) בפעולה שמתרחשת כעת (as we speak) דורשים are observing."
+  },
+
+  // ---------------- ARTICLES ("A" vs "AN") (BAND III) ----------------
+  {
+    category: "articles",
+    sentence: "The corporation offered [ ___ ] incentive to attract top researchers.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה incentive מתחילה בצליל תנועה (I קצרה), ולכן יש להשתמש ב-an."
+  },
+  {
+    category: "articles",
+    sentence: "She submitted [ ___ ] official proposal to the board of directors.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה official מתחילה בצליל תנועה (O), לכן נדרשת התווית an."
+  },
+  {
+    category: "articles",
+    sentence: "It was [ ___ ] substantial achievement for the developing district.",
+    target: "a",
+    options: ["a", "an"],
+    explanationHebrew: "המילה substantial מתחילה בעיצור (ס'), ולכן נשתמש בתווית a."
+  },
+  {
+    category: "articles",
+    sentence: "Receiving [ ___ ] inheritance altered his socioeconomic status completely.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה inheritance מתחילה בצליל תנועה (אי), ולכן חובה להשתמש ב-an."
+  },
+  {
+    category: "articles",
+    sentence: "They established [ ___ ] firm barrier around the nuclear research facility.",
+    target: "a",
+    options: ["a", "an"],
+    explanationHebrew: "המילה firm מתחילה בעיצור (פ'), ולכן נשתמש בתווית a."
+  },
+  {
+    category: "articles",
+    sentence: "That was [ ___ ] unique opportunity to illustrate the economic model.",
+    target: "a",
+    options: ["a", "an"],
+    explanationHebrew: "יוצא דופן: המילה unique נהגית בצליל עיצורי של 'יו' (כמו Y), ולכן מקבלת a ולא an!"
+  },
+  {
+    category: "articles",
+    sentence: "The survey proved to be [ ___ ] effective mechanism for reform.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה effective מתחילה בצליל תנועה (E), ולכן נשתמש ב-an."
+  },
+  {
+    category: "articles",
+    sentence: "He displayed [ ___ ] ethical dilemma regarding the leaked findings.",
+    target: "an",
+    options: ["a", "an"],
+    explanationHebrew: "המילה ethical מתחילה בצליל תנועה (E), ולכן יש להשתמש ב-an."
+  },
+  {
+    category: "articles",
+    sentence: "The team faced [ ___ ] severe financial crisis during the strike.",
+    target: "a",
+    options: ["a", "an"],
+    explanationHebrew: "המילה severe מתחילה בעיצור (ס'), ולכן נשתמש ב-a."
+  },
+  {
+    category: "articles",
+    sentence: "This discovery constitutes [ ___ ] universal truth in modern physics.",
+    target: "a",
+    options: ["a", "an"],
+    explanationHebrew: "המילה universal מתחילה בצליל 'יו' (עיצור), ולכן מקבלת a ולא an."
+  },
+
+  // ---------------- STATE & LOCATION (BAND III) ----------------
+  {
+    category: "state_location",
+    sentence: "The fundamental resources [ ___ ] in the secure warehouse.",
+    target: "are",
+    options: ["are", "is", "am", "be"],
+    explanationHebrew: "משאבים (resources) הם רבים, ולכן לתיאור מיקומם במחסן נשתמש ב-are."
+  },
+  {
+    category: "state_location",
+    sentence: "The primary components [ ___ ] already in proper order.",
+    target: "are",
+    options: ["are", "is", "was", "am"],
+    explanationHebrew: "רכיבים (components) ברבים, ולכן לתיאור מצבם נשתמש ב-are."
+  },
+  {
+    category: "state_location",
+    sentence: "His perception of the ethical challenge [ ___ ] remarkably clear.",
+    target: "is",
+    options: ["is", "are", "am", "were"],
+    explanationHebrew: "נושא המשפט הוא התפיסה (perception - יחיד), ולכן תיאור המצב דורש is."
+  },
+  {
+    category: "state_location",
+    sentence: "The external boundaries [ ___ ] visible from the mountain summit.",
+    target: "were",
+    options: ["were", "was", "is", "am"],
+    explanationHebrew: "גבולות חיצוניים (boundaries) הם רבים בעבר, ולכן נשתמש ב-were."
+  },
+  {
+    category: "state_location",
+    sentence: "I [ ___ ] confident that the scientific findings are authentic.",
+    target: "am",
+    options: ["am", "is", "are", "be"],
+    explanationHebrew: "לתיאור תחושה או מצב של I (גוף ראשון) נשתמש ב-am."
+  },
+  {
+    category: "state_location",
+    sentence: "The administrative staff [ ___ ] unanimous in their decision.",
+    target: "is",
+    options: ["is", "are", "am", "be"],
+    explanationHebrew: "צוות (staff) נחשב ליחידה קיבוצית אחת ביחיד, לכן תיאור המצב הוא is."
+  },
+  {
+    category: "state_location",
+    sentence: "These mutual obligations [ ___ ] crucial for future partnerships.",
+    target: "are",
+    options: ["are", "is", "was", "be"],
+    explanationHebrew: "התחייבויות הדדיות (obligations) ברבים, ולכן התואר crucial מוצמד ל-are."
+  },
+  {
+    category: "state_location",
+    sentence: "The initial draft [ ___ ] ready for executive review.",
+    target: "is",
+    options: ["is", "are", "am", "be"],
+    explanationHebrew: "טיוטה ראשונית (initial draft) היא יחיד, ולכן נשתמש ב-is."
+  },
+  {
+    category: "state_location",
+    sentence: "The chemical devices [ ___ ] inside the reinforced container.",
+    target: "are",
+    options: ["are", "is", "was", "am"],
+    explanationHebrew: "מתקנים כימיים (devices) הם רבים, ולכן לתיאור מיקומם נשתמש ב-are."
+  },
+  {
+    category: "state_location",
+    sentence: "The rationale behind the proposal [ ___ ] entirely legitimate.",
+    target: "is",
+    options: ["is", "are", "were", "am"],
+    explanationHebrew: "הרציונל (rationale) הוא שם עצם יחיד, ולכן תיאורו נעשה עם is."
+  },
+
+  // ---------------- PREPOSITIONS & IDIOMS / PROVERBS (BAND III) ----------------
+  {
+    category: "prepositions_proverbs",
+    sentence: "The civic center was built [ ___ ] the expense of green spaces.",
+    target: "at",
+    options: ["at", "by", "in", "for"],
+    explanationHebrew: "בביטוי הקבוע 'על חשבון של...' באנגלית משתמשים במילת היחס at (at the expense of)."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "We must finalize all legal documentation well [ ___ ] advance.",
+    target: "in",
+    options: ["in", "at", "by", "for"],
+    explanationHebrew: "בביטוי 'מראש' באנגלית משתמשים בצירוף הקבוע in advance."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "The research team succeeded [ ___ ] means of innovative methodology.",
+    target: "by",
+    options: ["by", "with", "in", "for"],
+    explanationHebrew: "בצירוף 'באמצעות / על ידי' באנגלית משתמשים בביטוי by means of."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "This severe policy is [ ___ ] no means acceptable to the residents.",
+    target: "by",
+    options: ["by", "at", "in", "under"],
+    explanationHebrew: "הביטוי השגור 'בשום פנים ואופן לא' באנגלית הוא by no means."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "They sacrificed short-term gains [ ___ ] the sake of sustainable stability.",
+    target: "for",
+    options: ["for", "in", "by", "at"],
+    explanationHebrew: "בביטוי 'למען / לטובת' באנגלית משתמשים בצירוף for the sake of."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "Actions speak louder than words; [ ___ ] the long run, outcomes matter most.",
+    target: "in",
+    options: ["in", "at", "on", "by"],
+    explanationHebrew: "בביטוי 'לטווח הרחוק' באנגלית משתמשים בצירוף in the long run."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "The backup generators remain positioned [ ___ ] the main laboratory complex.",
+    target: "behind",
+    options: ["behind", "under", "amongst", "by"],
+    explanationHebrew: "לציון מיקום פיזי של הגנרטורים מאחורי המתחם נשתמש ב-behind."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "The confidential agreements remained [ ___ ] lock and key until officially signed.",
+    target: "under",
+    options: ["under", "behind", "in", "at"],
+    explanationHebrew: "הביטוי הציורי והמקובל באנגלית לדברים שמורים ונעולים היטב הוא under lock and key."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "The decision was made [ ___ ] light of the newly discovered findings.",
+    target: "in",
+    options: ["in", "at", "by", "for"],
+    explanationHebrew: "הביטוי המקובל 'לאור האמור / לאור הממצאים' באנגלית הוא in light of."
+  },
+  {
+    category: "prepositions_proverbs",
+    sentence: "Most delegates voted [ ___ ] favor of the revised environmental protocol.",
+    target: "in",
+    options: ["in", "for", "with", "at"],
+    explanationHebrew: "בביטוי 'בעד / לטובת' באנגלית משתמשים בצירוף in favor of."
+  }
+];
+
+    const QUESTION_BANK = BAND3_QUESTION_BANK;
+
+    /* ============================================================================
+       AUDIO ENGINE (PURE WEB AUDIO API — ZERO EXTERNAL ASSETS)
+       Spec:
+       - Correct SFX: Sine bleeps (C6 to G6, 0.08s each).
+       - Incorrect SFX: Sawtooth tone dropping from 200 Hz to 90 Hz over 0.25s.
+       - Inflate SFX: Sine chirp sweeping from 300 Hz to 450 Hz with exponential decay.
+       - Takeoff SFX: Pentatonic arpeggio (C5, E5, G5, B5, C6) followed by white-noise whoosh.
+       ============================================================================ */
+    class AudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.bgmPlaying = false;
+        this.bgmTimer = null;
+      }
+
+      initCtx() {
+        if (!this.ctx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            this.ctx = new AudioContextClass();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      // Chicken Cluck Sound: "Bawk bawk bawk!"
+      playChickenCluck() {
+        if (this.muted) return;
+        this.initCtx();
+        if (!this.ctx) return;
+        const cluckTimes = [0, 0.1, 0.22];
+        cluckTimes.forEach((delay, index) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sawtooth';
+          const baseFreq = index === 2 ? 650 : 540;
+          
+          osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime + delay);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, this.ctx.currentTime + delay + 0.08);
+
+          gain.gain.setValueAtTime(0.3, this.ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + delay + 0.08);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(this.ctx.currentTime + delay);
+          osc.stop(this.ctx.currentTime + delay + 0.09);
+        });
+      }
+
+      // Procedural Cheerful Country Farm Pluck Loop (Triangle waves)
+      startBGM() {
+        this.initCtx();
+        if (this.bgmPlaying) return true;
+        const notes = [261.63, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66, 329.63]; // C - E - G - A - G - E - D - E
+        let step = 0;
+        this.bgmPlaying = true;
+
+        this.bgmTimer = setInterval(() => {
+          if (!this.ctx || this.muted) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'triangle'; // Warm acoustic banjo/guitar timbre
+          osc.frequency.setValueAtTime(notes[step % notes.length], this.ctx.currentTime);
+
+          gain.gain.setValueAtTime(0.045, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.28);
+          step++;
+        }, 280);
+
+        return true;
+      }
+
+      stopBGM() {
+        if (this.bgmTimer) clearInterval(this.bgmTimer);
+        this.bgmTimer = null;
+        this.bgmPlaying = false;
+        return false;
+      }
+
+      toggleBGM() {
+        if (this.bgmPlaying) {
+          return this.stopBGM();
+        } else {
+          return this.startBGM();
+        }
+      }
+
+      playCorrect() {
+        if (this.muted) return;
+        this.initCtx();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        // C6 = 1046.5 Hz, G6 = 1567.98 Hz
+        const notes = [1046.5, 1567.98];
+        notes.forEach((freq, index) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + (index * 0.08));
+
+          gain.gain.setValueAtTime(0.2, now + (index * 0.08));
+          gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.08) + 0.075);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now + (index * 0.08));
+          osc.stop(now + (index * 0.08) + 0.08);
+        });
+      }
+
+      playIncorrect() {
+        if (this.muted) return;
+        this.initCtx();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        // Tone dropping from 200 Hz to 90 Hz over 0.25s
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(90, now + 0.25);
+
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.25);
+      }
+
+      playInflate() {
+        if (this.muted) return;
+        this.initCtx();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        // Sine chirp sweeping from 300 Hz to 450 Hz with exponential decay
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(450, now + 0.18);
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+
+      playTakeoff() {
+        if (this.muted) return;
+        this.initCtx();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        // Pentatonic arpeggio: C5 (523.25), E5 (659.25), G5 (783.99), B5 (987.77), C6 (1046.5)
+        const notes = [523.25, 659.25, 783.99, 987.77, 1046.5];
+        const noteDuration = 0.09;
+
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + (idx * noteDuration));
+
+          gain.gain.setValueAtTime(0.22, now + (idx * noteDuration));
+          gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * noteDuration) + noteDuration + 0.05);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now + (idx * noteDuration));
+          osc.stop(now + (idx * noteDuration) + noteDuration + 0.06);
+        });
+
+        // Followed by white-noise whoosh
+        const whooshStart = now + (notes.length * noteDuration) * 0.7;
+        const bufferSize = this.ctx.sampleRate * 0.9;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        // Bandpass filter to sculpt whoosh
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(400, whooshStart);
+        filter.frequency.exponentialRampToValueAtTime(1400, whooshStart + 0.4);
+        filter.frequency.exponentialRampToValueAtTime(200, whooshStart + 0.8);
+        filter.Q.setValueAtTime(1.5, whooshStart);
+
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.01, whooshStart);
+        noiseGain.gain.linearRampToValueAtTime(0.3, whooshStart + 0.25);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, whooshStart + 0.85);
+
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(this.ctx.destination);
+
+        noise.start(whooshStart);
+        noise.stop(whooshStart + 0.9);
+      }
+
+      playChirp() {
+        if (this.muted) return;
+        this.initCtx();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(650, now);
+        osc.frequency.exponentialRampToValueAtTime(1300, now + 0.08);
+        osc.frequency.exponentialRampToValueAtTime(900, now + 0.15);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.16);
+      }
+    }
+
+    /* ============================================================================
+       CONFETTI BURST ENGINE (CANVAS PARTICLE SYSTEM)
+       ============================================================================ */
+    class ConfettiEngine {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.running = false;
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+      }
+
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+      }
+
+      burst() {
+        this.resize();
+        const colors = ['#F59E0B', '#EF4444', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6', '#FBBF24'];
+        const numParticles = 120;
+
+        for (let i = 0; i < numParticles; i++) {
+          this.particles.push({
+            x: this.canvas.width * (0.3 + Math.random() * 0.4),
+            y: this.canvas.height * 0.4,
+            vx: (Math.random() - 0.5) * 18,
+            vy: -Math.random() * 15 - 5,
+            size: Math.random() * 8 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 14,
+            opacity: 1,
+            gravity: 0.35,
+            shape: Math.random() > 0.4 ? 'rect' : 'circle'
+          });
+        }
+
+        if (!this.running) {
+          this.running = true;
+          this.tick();
+        }
+      }
+
+      tick() {
+        if (!this.running) return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.gravity;
+          p.vx *= 0.98;
+          p.rotation += p.rotationSpeed;
+          p.opacity -= 0.007;
+
+          if (p.opacity <= 0 || p.y > this.canvas.height + 20) {
+            this.particles.splice(i, 1);
+            continue;
+          }
+
+          this.ctx.save();
+          this.ctx.globalAlpha = Math.max(0, p.opacity);
+          this.ctx.translate(p.x, p.y);
+          this.ctx.rotate((p.rotation * Math.PI) / 180);
+          this.ctx.fillStyle = p.color;
+
+          if (p.shape === 'rect') {
+            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          } else {
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+            this.ctx.fill();
+          }
+
+          this.ctx.restore();
+        }
+
+        if (this.particles.length > 0) {
+          requestAnimationFrame(() => this.tick());
+        } else {
+          this.running = false;
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+      }
+    }
+
+    /* ============================================================================
+       SKIN PROGRESSION SYSTEM
+       Tiers: Yellow ➔ Coral ➔ Emerald ➔ Sapphire ➔ Golden Royale ➔ Holographic
+       ============================================================================ */
+    const SKIN_TIERS = [
+      { id: 'yellow', name: 'Yellow Chick', icon: '🐣', class: 'skin-yellow', desc: 'Sunny Starter' },
+      { id: 'coral', name: 'Coral Flamingo', icon: '🦩', class: 'skin-coral', desc: 'Warm & Fluffy' },
+      { id: 'emerald', name: 'Emerald Jade', icon: '🌿', class: 'skin-emerald', desc: 'Rare Forest Flyer' },
+      { id: 'sapphire', name: 'Sapphire Frost', icon: '💎', class: 'skin-sapphire', desc: 'Chilly Aviator' },
+      { id: 'golden', name: 'Golden Royale', icon: '👑', class: 'skin-golden', desc: 'Crowned Majesty' },
+      { id: 'holographic', name: 'Cosmic Holo', icon: '🌌', class: 'skin-holographic', desc: 'Legendary Traveler' }
+    ];
+
+    /* ============================================================================
+       GAME CONTROLLER & STATE
+       ============================================================================ */
+    class GrammarFlightGame {
+      constructor() {
+        this.audio = new AudioEngine();
+        this.confetti = new ConfettiEngine('confetti-canvas');
+
+        // State
+        this.score = 0;
+        this.streak = 0;
+        this.chickenScale = 1.0; // Range: 0.8x to 2.2x
+        this.highScore = parseInt(localStorage.getItem('cc_high_score') || '0', 10);
+        this.bestStreak = parseInt(localStorage.getItem('cc_best_streak') || '0', 10);
+        this.currentSkinIndex = parseInt(localStorage.getItem('cc_skin_tier') || '0', 10);
+        if (this.currentSkinIndex < 0 || this.currentSkinIndex >= SKIN_TIERS.length) {
+          this.currentSkinIndex = 0;
+        }
+        this.flightCount = parseInt(localStorage.getItem('cc_flight_count') || '0', 10);
+        this.currentLevel = localStorage.getItem('cc_level') || 'a1';
+        this.activeCategory = 'all';
+        this.currentQuestionIndex = 0;
+        this.filteredQuestions = [];
+        this.canAnswer = true;
+        this.activePopoverWord = null;
+
+        // DOM caching
+        this.dom = {
+          statScore: document.getElementById('stat-score'),
+          statHighScore: document.getElementById('stat-high-score'),
+          statStreak: document.getElementById('stat-streak'),
+          skinBadge: document.getElementById('skin-badge'),
+          skinTitle: document.getElementById('skin-title'),
+          skinIcon: document.getElementById('skin-icon'),
+          chickenHero: document.getElementById('chicken-hero'),
+          chickenShadow: document.getElementById('chicken-shadow'),
+          chickenCrown: document.getElementById('chicken-crown'),
+          cosmicAura: document.getElementById('cosmic-aura'),
+          progressBar: document.getElementById('flight-progress-bar'),
+          progressLabel: document.getElementById('flight-readiness-label'),
+          sentenceDisplay: document.getElementById('sentence-display'),
+          wordBankOptions: document.getElementById('word-bank-options'),
+          btnSubmitAnswer: document.getElementById('btn-submit-answer'),
+          feedbackBar: document.getElementById('feedback-bar'),
+          feedbackIcon: document.getElementById('feedback-icon'),
+          feedbackText: document.getElementById('feedback-text'),
+          btnNextQuestion: document.getElementById('btn-next-question'),
+          questionCategoryTag: document.getElementById('question-category-tag'),
+          questionTypeTag: document.getElementById('question-type-tag'),
+          categoryCount: document.getElementById('category-question-count'),
+          categoryPills: document.querySelectorAll('.category-pill'),
+          milestoneToast: document.getElementById('flight-milestone-toast'),
+          milestoneText: document.getElementById('flight-milestone-text'),
+          btnAudioToggle: document.getElementById('btn-audio-toggle'),
+          iconSound: document.getElementById('icon-sound'),
+          btnBgmToggle: document.getElementById('btn-bgm-toggle'),
+          iconBgm: document.getElementById('icon-bgm'),
+          textBgm: document.getElementById('text-bgm'),
+          lvlA1Btn: document.getElementById('lvl-a1-btn'),
+          lvlB3Btn: document.getElementById('lvl-b3-btn'),
+          levelDesc: document.getElementById('level-desc'),
+          popover: document.getElementById('vocab-popover'),
+          guideModal: document.getElementById('guide-modal'),
+          btnOpenGuide: document.getElementById('btn-open-guide'),
+          btnCloseGuide: document.getElementById('btn-close-guide'),
+          btnCloseGuide2: document.getElementById('btn-close-guide-2'),
+          btnHeaderChicken: document.getElementById('btn-header-chicken'),
+          tabBtnRules: document.getElementById('tab-btn-rules'),
+          tabBtnVocab: document.getElementById('tab-btn-vocab'),
+          tabContentRules: document.getElementById('tab-content-rules'),
+          tabContentVocab: document.getElementById('tab-content-vocab'),
+          vocabSearchInput: document.getElementById('vocab-search-input'),
+          vocabListContainer: document.getElementById('vocab-list-container'),
+          explanationCard: document.getElementById('explanation-card'),
+          correctAnswerBadge: document.getElementById('correct-answer-badge'),
+          explanationText: document.getElementById('explanation-text'),
+          continueNextBtn: document.getElementById('continue-next-btn'),
+          eyesNormal: document.getElementById('eyes-normal'),
+          eyesDizzy: document.getElementById('eyes-dizzy')
+        };
+        this.lastFailedTarget = null;
+
+        this.init();
+      }
+
+      init() {
+        this.setupEventListeners();
+        this.setLevel(this.currentLevel);
+        this.updateChickenVisuals();
+        this.renderVocabExplorer('');
+      }
+
+      setupEventListeners() {
+        // Unlock AudioContext and start cheerful Farm BGM on first user interaction anywhere
+        const startAudioAndBGM = () => {
+          this.audio.initCtx();
+          if (!this.audio.bgmPlaying && !this.audio.muted) {
+            this.audio.startBGM();
+            if (this.dom.iconBgm) this.dom.iconBgm.textContent = '🎶';
+            if (this.dom.textBgm) this.dom.textBgm.textContent = 'Music: On';
+            if (this.dom.btnBgmToggle) {
+              this.dom.btnBgmToggle.classList.add('bg-emerald-100', 'border-emerald-300');
+            }
+          }
+        };
+        window.addEventListener('pointerdown', startAudioAndBGM, { once: true });
+        window.addEventListener('keydown', startAudioAndBGM, { once: true });
+
+        // Level Selector Toggle
+        if (this.dom.lvlA1Btn) {
+          this.dom.lvlA1Btn.addEventListener('click', () => this.setLevel('a1'));
+        }
+        if (this.dom.lvlB3Btn) {
+          this.dom.lvlB3Btn.addEventListener('click', () => this.setLevel('band3'));
+        }
+
+        // Category Pills
+        this.dom.categoryPills.forEach(pill => {
+          pill.addEventListener('click', (e) => {
+            const cat = e.currentTarget.getAttribute('data-cat');
+            this.setCategory(cat);
+          });
+        });
+
+        // Submit Check Answer Button
+        if (this.dom.btnSubmitAnswer) {
+          this.dom.btnSubmitAnswer.addEventListener('click', () => {
+            if (!this.canAnswer) return;
+            const input = document.getElementById('blank-input');
+            if (input) {
+              this.submitAnswer(input.value.trim());
+            }
+          });
+        }
+
+        // Next Question Button
+        this.dom.btnNextQuestion.addEventListener('click', () => {
+          this.loadNextQuestion();
+        });
+
+        // Manual Continue Button on Explanation Card (Spec v5)
+        if (this.dom.continueNextBtn) {
+          this.dom.continueNextBtn.addEventListener('click', () => {
+            this.loadNextQuestion();
+          });
+        }
+
+        // Farm BGM Toggle
+        if (this.dom.btnBgmToggle) {
+          this.dom.btnBgmToggle.addEventListener('click', () => {
+            const isPlaying = this.audio.toggleBGM();
+            if (this.dom.iconBgm) this.dom.iconBgm.textContent = isPlaying ? '🎶' : '🎵';
+            if (this.dom.textBgm) this.dom.textBgm.textContent = isPlaying ? 'Music: On' : 'Music: Off';
+            this.dom.btnBgmToggle.classList.toggle('bg-emerald-100', isPlaying);
+            this.dom.btnBgmToggle.classList.toggle('border-emerald-300', isPlaying);
+          });
+        }
+
+        // Audio Mute Toggle
+        this.dom.btnAudioToggle.addEventListener('click', () => {
+          this.audio.muted = !this.audio.muted;
+          this.dom.iconSound.textContent = this.audio.muted ? '🔇' : '🔊';
+          this.dom.btnAudioToggle.classList.toggle('opacity-50', this.audio.muted);
+        });
+
+        // Tap Chicken directly to chirp & cluck
+        this.dom.chickenHero.addEventListener('click', () => {
+          this.audio.playChickenCluck();
+          this.audio.playInflate();
+          this.dom.chickenHero.classList.add('animate-bounce');
+          setTimeout(() => {
+            this.dom.chickenHero.classList.remove('animate-bounce');
+          }, 600);
+        });
+
+        // Header Chicken Logo click
+        if (this.dom.btnHeaderChicken) {
+          this.dom.btnHeaderChicken.addEventListener('click', () => {
+            this.audio.playChickenCluck();
+          });
+        }
+
+        // Guide Modal
+        this.dom.btnOpenGuide.addEventListener('click', () => {
+          this.dom.guideModal.classList.remove('hidden');
+        });
+        const closeGuide = () => this.dom.guideModal.classList.add('hidden');
+        this.dom.btnCloseGuide.addEventListener('click', closeGuide);
+        this.dom.btnCloseGuide2.addEventListener('click', closeGuide);
+        this.dom.guideModal.addEventListener('click', (e) => {
+          if (e.target === this.dom.guideModal) closeGuide();
+        });
+
+        // Vocab Explorer Tabs
+        if (this.dom.tabBtnRules && this.dom.tabBtnVocab) {
+          this.dom.tabBtnRules.addEventListener('click', () => {
+            this.dom.tabBtnRules.className = 'px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-900 text-white shadow-sm transition-all';
+            this.dom.tabBtnVocab.className = 'px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all flex items-center gap-1.5';
+            this.dom.tabContentRules.classList.remove('hidden');
+            this.dom.tabContentVocab.classList.add('hidden');
+          });
+
+          this.dom.tabBtnVocab.addEventListener('click', () => {
+            this.dom.tabBtnVocab.className = 'px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-900 text-white shadow-sm transition-all flex items-center gap-1.5';
+            this.dom.tabBtnRules.className = 'px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all';
+            this.dom.tabContentRules.classList.add('hidden');
+            this.dom.tabContentVocab.classList.remove('hidden');
+            this.renderVocabExplorer(this.dom.vocabSearchInput ? this.dom.vocabSearchInput.value : '');
+            if (this.dom.vocabSearchInput) this.dom.vocabSearchInput.focus();
+          });
+        }
+
+        if (this.dom.vocabSearchInput) {
+          this.dom.vocabSearchInput.addEventListener('input', (e) => {
+            this.renderVocabExplorer(e.target.value);
+          });
+        }
+
+        // Dismiss Popover when tapping outside
+        document.addEventListener('click', (e) => {
+          if (!this.dom.popover.contains(e.target)) {
+            this.dom.popover.classList.add('hidden');
+            document.querySelectorAll('.word-highlight').forEach(el => {
+              el.classList.remove('word-highlight', 'bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-400/30', 'font-semibold');
+              el.classList.add('border-transparent');
+            });
+          }
+        });
+
+        // Global Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          if (this.dom.guideModal && !this.dom.guideModal.classList.contains('hidden')) {
+            if (e.key === 'Escape') closeGuide();
+            return;
+          }
+
+          if (e.key === 'Escape') {
+            this.dom.popover.classList.add('hidden');
+          }
+
+          // Advance with Space or Enter when explanation card is open
+          if (this.dom.explanationCard && !this.dom.explanationCard.classList.contains('hidden')) {
+            if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault();
+              this.loadNextQuestion();
+            }
+            return;
+          }
+
+          // Number keys 1-4 to pick from word bank
+          const keyNum = parseInt(e.key);
+          if (keyNum >= 1 && keyNum <= 4) {
+            const pills = this.dom.wordBankOptions ? this.dom.wordBankOptions.querySelectorAll('.word-bank-pill') : [];
+            if (pills[keyNum - 1]) {
+              pills[keyNum - 1].click();
+            }
+          }
+        });
+      }
+
+      setLevel(lvl) {
+        this.currentLevel = lvl;
+        localStorage.setItem('cc_level', lvl);
+
+        if (lvl === 'a1') {
+          if (this.dom.lvlA1Btn) {
+            this.dom.lvlA1Btn.className = 'flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all bg-white text-emerald-600 shadow-sm active:scale-95';
+          }
+          if (this.dom.lvlB3Btn) {
+            this.dom.lvlB3Btn.className = 'flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all text-slate-600 hover:text-slate-900 active:scale-95';
+          }
+          if (this.dom.levelDesc) {
+            this.dom.levelDesc.className = 'bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg font-semibold';
+            this.dom.levelDesc.textContent = 'Level 1: Everyday vocabulary & daily life';
+          }
+        } else {
+          if (this.dom.lvlB3Btn) {
+            this.dom.lvlB3Btn.className = 'flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all bg-white text-purple-700 shadow-sm active:scale-95';
+          }
+          if (this.dom.lvlA1Btn) {
+            this.dom.lvlA1Btn.className = 'flex-1 sm:flex-initial py-1 px-3.5 text-xs font-bold rounded-xl transition-all text-slate-600 hover:text-slate-900 active:scale-95';
+          }
+          if (this.dom.levelDesc) {
+            this.dom.levelDesc.className = 'bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-lg font-semibold';
+            this.dom.levelDesc.textContent = 'Level 2: Band III Grade 12 Advanced';
+          }
+        }
+
+        this.setCategory(this.activeCategory);
+      }
+
+      setCategory(cat) {
+        this.activeCategory = cat;
+        this.dom.categoryPills.forEach(pill => {
+          const match = pill.getAttribute('data-cat') === cat;
+          if (match) {
+            pill.className = 'category-pill active shrink-0 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-150 bg-slate-900 text-white shadow-md shadow-slate-900/20 active:scale-95';
+          } else {
+            pill.className = 'category-pill shrink-0 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all duration-150 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 active:scale-95';
+          }
+        });
+
+        const sourceBank = this.currentLevel === 'a1' ? A1_QUESTION_BANK : BAND3_QUESTION_BANK;
+
+        if (cat === 'all') {
+          this.filteredQuestions = [...sourceBank];
+        } else {
+          this.filteredQuestions = sourceBank.filter(q => q.category === cat);
+        }
+
+        // Shuffle questions
+        this.shuffle(this.filteredQuestions);
+        this.currentQuestionIndex = 0;
+        this.dom.categoryCount.textContent = `${this.filteredQuestions.length} Question${this.filteredQuestions.length === 1 ? '' : 's'}`;
+        this.loadNextQuestion();
+      }
+
+      shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      getNextQuestion() {
+        const pool = (this.currentLevel === 'a1' ? A1_QUESTION_BANK : BAND3_QUESTION_BANK)
+          .filter(q => this.activeCategory === 'all' || q.category === this.activeCategory);
+
+        if (this.lastFailedTarget) {
+          const failedWord = this.lastFailedTarget.toLowerCase().trim();
+          // Find a question with the same target word that is NOT the same sentence
+          const remediationMatch = pool.find(q =>
+            q.target.toLowerCase().trim() === failedWord &&
+            (!this.currentQuestion || q.sentence !== this.currentQuestion.sentence)
+          );
+          this.lastFailedTarget = null;
+          if (remediationMatch) return remediationMatch;
+
+          // Fallback: match same category
+          if (this.currentQuestion) {
+            const catMatch = pool.find(q =>
+              q.category === this.currentQuestion.category &&
+              q.sentence !== this.currentQuestion.sentence
+            );
+            if (catMatch) return catMatch;
+          }
+        }
+
+        if (this.filteredQuestions.length === 0) {
+          this.filteredQuestions = [...pool];
+          this.shuffle(this.filteredQuestions);
+          this.currentQuestionIndex = 0;
+        }
+
+        if (this.currentQuestionIndex >= this.filteredQuestions.length) {
+          this.currentQuestionIndex = 0;
+          this.shuffle(this.filteredQuestions);
+        }
+
+        return this.filteredQuestions[this.currentQuestionIndex++];
+      }
+
+      loadNextQuestion() {
+        this.canAnswer = true;
+        this.dom.popover.classList.add('hidden');
+
+        // Hide explanation card
+        if (this.dom.explanationCard) {
+          this.dom.explanationCard.classList.add('hidden');
+        }
+
+        // Restore normal chicken eyes
+        if (this.dom.eyesDizzy) this.dom.eyesDizzy.classList.add('hidden');
+        if (this.dom.eyesNormal) this.dom.eyesNormal.classList.remove('hidden');
+
+        // Hide feedback bar
+        this.dom.feedbackBar.classList.remove('opacity-100', 'bg-emerald-50', 'border-emerald-200', 'bg-rose-50', 'border-rose-200');
+        this.dom.feedbackBar.classList.add('opacity-0', 'pointer-events-none');
+        this.dom.btnNextQuestion.classList.add('hidden');
+
+        const q = this.getNextQuestion();
+        if (!q) return;
+        this.currentQuestion = q;
+
+        // Header Meta Tags
+        this.dom.questionCategoryTag.textContent = this.formatCategoryName(q.category);
+        this.dom.questionTypeTag.textContent = q.typeLabel || q.type || this.formatCategoryName(q.category);
+
+        // Render tokenized sentence with active blank input
+        this.renderInteractiveSentence(q.sentence, q);
+      }
+
+      formatCategoryName(cat) {
+        const names = {
+          all: "Mix All",
+          past_simple: "Past Simple",
+          present_simple: "Present Simple",
+          future_simple: "Future Simple",
+          present_progressive: "Present Progressive",
+          articles: "Articles (A vs An)",
+          state_location: "State & Location",
+          prepositions_proverbs: "Prepositions & Idioms"
+        };
+        return names[cat] || cat;
+      }
+
+      /* ============================================================================
+         UI TOKENIZER & ACTIVE INLINE INPUT ENGINE (SPEC V4)
+         ============================================================================ */
+      renderInteractiveSentence(sentenceStr, currentQuestion) {
+        const container = this.dom.sentenceDisplay;
+        container.innerHTML = '';
+
+        // Check if sentence contains any known multi-word idioms from VOCAB_DICTIONARY
+        const lowerSentence = sentenceStr.toLowerCase().replace(/[^a-z\s]/g, ' ');
+        let detectedIdiom = null;
+        for (const key of Object.keys(VOCAB_DICTIONARY)) {
+          if (key.includes(' ') && lowerSentence.includes(key)) {
+            detectedIdiom = { phrase: key, data: VOCAB_DICTIONARY[key] };
+            break;
+          }
+        }
+
+        // Split sentence by blank placeholder: [ ___ ] or [___]
+        const segments = sentenceStr.split(/(\[\s*___\s*\])/g);
+
+        segments.forEach(segment => {
+          if (/\[\s*___\s*\]/.test(segment)) {
+            const inputWrapper = document.createElement('span');
+            inputWrapper.className = 'inline-block mx-1.5 align-middle';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'blank-input';
+            input.placeholder = 'type answer...';
+            input.autocomplete = 'off';
+            input.autocorrect = 'off';
+            input.autocapitalize = 'off';
+            input.spellcheck = false;
+            input.className = 'w-36 sm:w-48 px-3 py-1.5 text-center font-bold text-blue-600 bg-blue-50/90 border-2 border-blue-400 focus:border-blue-600 focus:bg-white rounded-xl outline-none shadow-inner transition-all align-middle text-base sm:text-xl';
+
+            // Auto-submit on Enter key
+            input.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.canAnswer) {
+                  this.submitAnswer(input.value.trim());
+                } else {
+                  this.loadNextQuestion();
+                }
+              }
+            });
+
+            inputWrapper.appendChild(input);
+            container.appendChild(inputWrapper);
+            setTimeout(() => {
+              input.focus({ preventScroll: true });
+            }, 100);
+          } else {
+            const tokens = segment.split(/\s+/).filter(w => w.length > 0);
+            tokens.forEach(token => {
+              const cleanWord = token.toLowerCase().replace(/[^a-z]/g, '');
+              const wordSpan = document.createElement('span');
+              wordSpan.className = 'word-token cursor-pointer hover:bg-amber-100 hover:text-amber-900 px-1 py-0.5 rounded-lg border border-transparent transition duration-150 inline-block select-none';
+              wordSpan.textContent = token + ' ';
+
+              wordSpan.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                // 1. Visual Highlight: Mark tapped word with active pill
+                document.querySelectorAll('.word-highlight').forEach(el => {
+                  el.classList.remove('word-highlight', 'bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-400/30', 'font-semibold');
+                  el.classList.add('border-transparent');
+                });
+                wordSpan.classList.remove('border-transparent');
+                wordSpan.classList.add('word-highlight', 'bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-400/30', 'font-semibold');
+
+                // 2. Pronunciation (TTS): Speak clean English word using Web Speech API
+                if ('speechSynthesis' in window && cleanWord) {
+                  window.speechSynthesis.cancel();
+                  const utterance = new SpeechSynthesisUtterance(cleanWord);
+                  utterance.lang = 'en-US';
+                  utterance.rate = 0.88;
+                  window.speechSynthesis.speak(utterance);
+                }
+
+                // 3. Hebrew Translation Card: Position iOS frosted-glass tooltip
+                const popover = this.dom.popover;
+                const entry = VOCAB_DICTIONARY[cleanWord];
+                const hebrewText = entry ? entry.hebrew : "תרגום לא נמצא";
+                const posText = entry ? entry.pos.toUpperCase() : "WORD";
+
+                // Check if clicked word is part of the detected idiom
+                let idiomHtml = '';
+                if (detectedIdiom && detectedIdiom.phrase.split(' ').includes(cleanWord)) {
+                  idiomHtml = `
+                    <div class="mt-2.5 pt-2 border-t border-amber-400/30 bg-amber-500/10 -mx-4 -mb-4 px-4 py-2.5 rounded-b-2xl">
+                      <div class="flex items-center justify-between text-[10px] text-amber-300 font-bold uppercase tracking-wider mb-0.5">
+                        <span>✨ Part of Idiom</span>
+                        <span class="bg-amber-400/20 px-1.5 py-0.2 rounded text-[9px]">PHRASE</span>
+                      </div>
+                      <div class="text-xs font-semibold text-amber-100 font-mono">"${detectedIdiom.phrase}"</div>
+                      <div class="text-right text-xs font-bold text-amber-200 mt-0.5 font-rubik" dir="rtl">
+                        ${detectedIdiom.data.hebrew}
+                      </div>
+                    </div>
+                  `;
+                }
+
+                popover.innerHTML = `
+                  <div class="flex items-center justify-between gap-3 text-xs text-slate-400 mb-1 border-b border-white/10 pb-1">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-mono text-blue-400 font-bold text-sm tracking-wide">${cleanWord}</span>
+                      <span class="text-[10px] bg-white/15 px-2 py-0.5 rounded-full font-bold uppercase text-slate-200">${posText}</span>
+                    </div>
+                    <button id="btn-close-popover" class="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 flex items-center justify-center text-xs transition">✕</button>
+                  </div>
+                  <div class="text-right text-base font-bold text-white tracking-wide my-1 font-rubik" dir="rtl">
+                    ${hebrewText}
+                  </div>
+                  <div class="mt-2 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/10 pt-1.5 opacity-85">
+                    <span class="flex items-center gap-1 text-slate-300">
+                      <span>🔊</span> Pronounced
+                    </span>
+                    <span class="text-amber-300 font-semibold text-[10px]">Ministry Dictionary</span>
+                  </div>
+                  ${idiomHtml}
+                `;
+
+                popover.classList.remove('hidden');
+
+                const btnClose = popover.querySelector('#btn-close-popover');
+                if (btnClose) {
+                  btnClose.onclick = (ev) => {
+                    ev.stopPropagation();
+                    popover.classList.add('hidden');
+                  };
+                }
+
+                // Position Popover above the word (or below if near top)
+                const rect = wordSpan.getBoundingClientRect();
+                const popoverHeight = popover.offsetHeight || 105;
+                let topPos = rect.top - popoverHeight - 12;
+                if (topPos < 10) {
+                  topPos = rect.bottom + 8;
+                }
+                const leftPos = Math.max(16, Math.min(window.innerWidth - 300, rect.left + (rect.width / 2) - 144));
+
+                popover.style.top = `${topPos}px`;
+                popover.style.left = `${leftPos}px`;
+              });
+
+              container.appendChild(wordSpan);
+            });
+          }
+        });
+
+        // Render Word Bank Reference Pills beneath
+        this.renderWordBankPills(currentQuestion.options);
+      }
+
+      /* ============================================================================
+         WORD BANK REFERENCE PILLS
+         ============================================================================ */
+      renderWordBankPills(options) {
+        const bankContainer = this.dom.wordBankOptions;
+        if (!bankContainer) return;
+        bankContainer.innerHTML = '';
+
+        options.forEach(opt => {
+          const pill = document.createElement('button');
+          pill.type = 'button';
+          pill.className = 'word-bank-pill px-4 py-2 bg-white/90 hover:bg-blue-50 border border-slate-200 text-slate-800 font-semibold rounded-2xl shadow-sm active:scale-95 transition-all text-sm hover:border-blue-300';
+          pill.textContent = opt;
+
+          // Tapping a word pill auto-fills the input box
+          pill.onclick = () => {
+            if (!this.canAnswer) return;
+            const input = document.getElementById('blank-input');
+            if (input) {
+              input.value = opt;
+              input.focus({ preventScroll: true });
+            }
+          };
+
+          bankContainer.appendChild(pill);
+        });
+      }
+
+      /* ============================================================================
+         SUBMIT & VALIDATE ANSWER ACTION
+         ============================================================================ */
+      submitAnswer(userAnswer) {
+        if (!this.canAnswer) return;
+        this.canAnswer = false;
+
+        const q = this.currentQuestion;
+        const input = document.getElementById('blank-input');
+        const cleanUserAnswer = (userAnswer || '').trim();
+        const isCorrect = cleanUserAnswer.toLowerCase() === q.target.trim().toLowerCase();
+
+        // Lock input field
+        if (input) {
+          input.disabled = true;
+          input.value = cleanUserAnswer || q.target;
+        }
+
+        // Lock and highlight word bank pills
+        const pills = this.dom.wordBankOptions ? this.dom.wordBankOptions.querySelectorAll('.word-bank-pill') : [];
+        pills.forEach(pill => {
+          pill.disabled = true;
+          if (pill.textContent.trim().toLowerCase() === q.target.trim().toLowerCase()) {
+            pill.classList.remove('bg-white/90', 'border-slate-200');
+            pill.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900', 'ring-2', 'ring-emerald-400/40');
+          }
+        });
+
+        if (isCorrect) {
+          this.lastFailedTarget = null;
+
+          // Ensure explanation card is hidden and eyes are normal
+          if (this.dom.explanationCard) this.dom.explanationCard.classList.add('hidden');
+          if (this.dom.eyesDizzy) this.dom.eyesDizzy.classList.add('hidden');
+          if (this.dom.eyesNormal) this.dom.eyesNormal.classList.remove('hidden');
+
+          // Visuals on Input
+          if (input) {
+            input.classList.remove('border-blue-400', 'text-blue-600', 'bg-blue-50/90');
+            input.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-800', 'ring-2', 'ring-emerald-400/30');
+          }
+
+          // Audio: Chime + Cluck + Inflate Chirp
+          this.audio.playCorrect();
+          setTimeout(() => this.audio.playChickenCluck(), 160);
+          setTimeout(() => this.audio.playInflate(), 300);
+
+          // State progression
+          this.score += 10;
+          this.streak += 1;
+          this.chickenScale = Math.min(2.2, this.chickenScale + 0.05);
+
+          this.updateStats();
+          this.updateChickenVisuals();
+
+          this.showFeedback(true, `Splendid! +10 Points`);
+
+          // Check Milestone (Streak 10)
+          if (this.streak >= 10) {
+            setTimeout(() => this.triggerStreakMilestone(), 400);
+          } else {
+            // Auto advance next question
+            setTimeout(() => {
+              this.loadNextQuestion();
+            }, 1250);
+          }
+
+        } else {
+          // Record target for targeted remediation loop
+          this.lastFailedTarget = q.target;
+
+          // Visuals on Input (Wrong)
+          if (input) {
+            input.classList.remove('border-blue-400', 'text-blue-600', 'bg-blue-50/90');
+            input.classList.add('bg-rose-50', 'border-rose-500', 'text-rose-800', 'ring-2', 'ring-rose-400/30');
+          }
+
+          // Audio: Buzz / Incorrect tone
+          this.audio.playIncorrect();
+
+          // Deflate chicken & reset streak
+          this.streak = 0;
+          this.chickenScale = Math.max(0.8, this.chickenScale - 0.05);
+
+          // Switch chicken eyes to dizzy (@_@)
+          if (this.dom.eyesNormal) this.dom.eyesNormal.classList.add('hidden');
+          if (this.dom.eyesDizzy) this.dom.eyesDizzy.classList.remove('hidden');
+
+          // Shake chicken
+          this.dom.chickenHero.classList.add('shake-wrong');
+          setTimeout(() => this.dom.chickenHero.classList.remove('shake-wrong'), 500);
+
+          this.updateStats();
+          this.updateChickenVisuals();
+
+          // Populate & reveal Hebrew Explanation Card
+          if (this.dom.correctAnswerBadge) {
+            this.dom.correctAnswerBadge.textContent = 'תשובה: ' + q.target;
+          }
+          if (this.dom.explanationText) {
+            this.dom.explanationText.textContent = q.explanationHebrew || ('התשובה הנכונה היא ' + q.target);
+          }
+          if (this.dom.explanationCard) {
+            this.dom.explanationCard.classList.remove('hidden');
+          }
+
+          // DO NOT auto-advance: student has unlimited time to read and comprehend
+        }
+      }
+
+      showFeedback(isSuccess, message) {
+        const bar = this.dom.feedbackBar;
+        bar.classList.remove('opacity-0', 'pointer-events-none', 'bg-emerald-50', 'border-emerald-200', 'bg-rose-50', 'border-rose-200');
+        
+        if (isSuccess) {
+          bar.classList.add('opacity-100', 'bg-emerald-50', 'border-emerald-200');
+          this.dom.feedbackIcon.textContent = '🌟';
+          this.dom.feedbackText.className = 'text-emerald-800 font-bold';
+          this.dom.feedbackText.textContent = message;
+        } else {
+          bar.classList.add('opacity-100', 'bg-rose-50', 'border-rose-200');
+          this.dom.feedbackIcon.textContent = '💡';
+          this.dom.feedbackText.className = 'text-rose-900 font-semibold';
+          this.dom.feedbackText.textContent = message;
+        }
+      }
+
+      updateStats() {
+        this.dom.statScore.textContent = this.score;
+        this.dom.statStreak.textContent = this.streak;
+
+        // Progress toward streak 10
+        const progressPct = Math.min(100, (this.streak / 10) * 100);
+        this.dom.progressBar.style.width = `${progressPct}%`;
+        this.dom.progressLabel.textContent = `${Math.round(progressPct)}% (Scale: ${this.chickenScale.toFixed(2)}x)`;
+      }
+
+      updateChickenVisuals() {
+        // Update CSS scale & shadow width
+        this.dom.chickenHero.style.setProperty('--chicken-scale', this.chickenScale);
+        this.dom.chickenHero.style.transform = `scale(${this.chickenScale})`;
+
+        const shadowWidth = Math.round(128 * this.chickenScale);
+        this.dom.chickenShadow.style.width = `${shadowWidth}px`;
+        this.dom.chickenShadow.style.opacity = (0.2 + (this.chickenScale - 0.8) * 0.15).toFixed(2);
+
+        // Update Skin Class & Badge
+        const skin = SKIN_TIERS[this.currentSkinIndex];
+        this.dom.skinTitle.textContent = skin.name;
+        this.dom.skinIcon.textContent = skin.icon;
+
+        // Clear existing skin classes
+        SKIN_TIERS.forEach(s => this.dom.chickenHero.classList.remove(s.class));
+        this.dom.chickenHero.classList.add(skin.class);
+
+        // Show Crown on Golden Royale (Tier 4) & Cosmic Holo (Tier 5)
+        if (this.currentSkinIndex >= 4) {
+          this.dom.chickenCrown.classList.remove('hidden');
+        } else {
+          this.dom.chickenCrown.classList.add('hidden');
+        }
+
+        // Show Cosmic Aura on Tier 5
+        if (this.currentSkinIndex === 5) {
+          this.dom.cosmicAura.classList.remove('hidden');
+        } else {
+          this.dom.cosmicAura.classList.add('hidden');
+        }
+      }
+
+      /* ============================================================================
+         SEARCHABLE VOCABULARY EXPLORER
+         ============================================================================ */
+      renderVocabExplorer(query) {
+        const container = this.dom.vocabListContainer;
+        if (!container) return;
+        container.innerHTML = '';
+
+        const cleanQ = (query || '').trim().toLowerCase();
+        const keys = Object.keys(VOCAB_DICTIONARY).sort();
+
+        let matchCount = 0;
+        keys.forEach(word => {
+          const entry = VOCAB_DICTIONARY[word];
+          if (cleanQ) {
+            const matchEnglish = word.toLowerCase().includes(cleanQ);
+            const matchHebrew = (entry.hebrew || '').toLowerCase().includes(cleanQ);
+            if (!matchEnglish && !matchHebrew) return;
+          }
+
+          matchCount++;
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-200/80 transition-colors gap-2';
+
+          row.innerHTML = `
+            <div class="flex items-center gap-2">
+              <button type="button" class="btn-speak-word w-7 h-7 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 flex items-center justify-center text-xs active:scale-95 shadow-2xs transition" title="Listen">🔊</button>
+              <span class="font-bold text-slate-900 text-sm font-mono">${word}</span>
+              <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600">${entry.pos}</span>
+            </div>
+            <div class="text-right text-xs sm:text-sm font-bold text-slate-700 font-rubik" dir="rtl">
+              ${entry.hebrew}
+            </div>
+          `;
+
+          const speakBtn = row.querySelector('.btn-speak-word');
+          if (speakBtn) {
+            speakBtn.onclick = (ev) => {
+              ev.stopPropagation();
+              if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(word);
+                utter.lang = 'en-US';
+                utter.rate = 0.88;
+                window.speechSynthesis.speak(utter);
+              }
+            };
+          }
+
+          container.appendChild(row);
+        });
+
+        if (matchCount === 0) {
+          container.innerHTML = `
+            <div class="py-8 text-center text-xs text-slate-400">
+              No matching words found for "${query}".
+            </div>
+          `;
+        }
+      }
+
+      /* ============================================================================
+         STREAK 10 MILESTONE: FLAP WINGS, ARPEGGIO, TAKEOFF & SKIN PROMOTION
+         ============================================================================ */
+      triggerStreakMilestone() {
+        this.canAnswer = false;
+        this.flightCount++;
+
+        // 1. Play Takeoff SFX (pentatonic arpeggio + whoosh)
+        this.audio.playTakeoff();
+
+        // 2. Confetti Burst
+        this.confetti.burst();
+
+        // 3. Show milestone toast banner
+        const nextSkin = SKIN_TIERS[(this.currentSkinIndex + 1) % SKIN_TIERS.length];
+        this.dom.milestoneText.textContent = `10 STREAK FLIGHT! Unlocked ${nextSkin.name}!`;
+        this.dom.milestoneToast.classList.remove('scale-0');
+        this.dom.milestoneToast.classList.add('scale-100');
+
+        // 4. Animate wings & Fly off-screen top-right
+        const wingL = document.getElementById('wing-left');
+        const wingR = document.getElementById('wing-right');
+        if (wingL && wingR) {
+          wingL.classList.add('animate-wing-flap');
+          wingR.classList.add('animate-wing-flap');
+        }
+
+        this.dom.chickenHero.classList.add('anim-flying');
+
+        // 5. After flight completes (1.8s) -> Advance skin tier & drop new chicken
+        setTimeout(() => {
+          // Advance Skin
+          this.currentSkinIndex = (this.currentSkinIndex + 1) % SKIN_TIERS.length;
+          this.streak = 0;
+          this.chickenScale = 1.0;
+          this.updateStats();
+          this.updateChickenVisuals();
+
+          // Reset flying animation & add drop-in animation
+          this.dom.chickenHero.classList.remove('anim-flying');
+          if (wingL && wingR) {
+            wingL.classList.remove('animate-wing-flap');
+            wingR.classList.remove('animate-wing-flap');
+          }
+
+          this.dom.chickenHero.classList.add('anim-drop-in');
+          this.audio.playInflate();
+
+          // Hide toast
+          this.dom.milestoneToast.classList.remove('scale-100');
+          this.dom.milestoneToast.classList.add('scale-0');
+
+          setTimeout(() => {
+            this.dom.chickenHero.classList.remove('anim-drop-in');
+            this.currentQuestionIndex++;
+            this.loadNextQuestion();
+          }, 850);
+
+        }, 1800);
+      }
+    }
+
+    // Initialize application on window load
+    window.addEventListener('DOMContentLoaded', () => {
+      window.game = new GrammarFlightGame();
+    });
+  </script>
+</body>
+</html>
